@@ -14,8 +14,11 @@
                              (string->path (get-preference 'files-viewer:directory))
                              #f)
                              )
+  (define is-show #t)
   (define *change-directory #f)
   (define *files #f)
+  (define *show-plugin #f)
+  (define *hide-plugin #f)
   (define (update-files!)
     (when (and main-directory (directory-exists? main-directory))
       (send *files set-dir! main-directory)
@@ -23,12 +26,13 @@
   (define drracket-frame-mixin
     (mixin (drracket:unit:frame<%>) ()
       (super-new)
+      (inherit get-show-menu)
       (define/override (get-definitions/interactions-panel-parent)
         (define area (new horizontal-panel% [parent (super get-definitions/interactions-panel-parent)]
                          ))
         (define real-area (new vertical-panel% [parent area]
                                [stretchable-width #f]))
-        (set! *change-directory (new button% [label "Change the directory"]
+        (set! *change-directory (new button% [label "Change the Directory"]
                                    [parent real-area]
                                    [callback (lambda (b e)
                                                (define dir (get-directory))
@@ -45,6 +49,26 @@
                                       (send this change-to-file
                                        (send i user-data))
                                       )]))
+        (set! *show-plugin (new menu-item%
+                                [label "Show the File Manager"]
+                                [callback (lambda (c e) (unless is-show
+                                                          (send area add-child
+                                                              real-area)
+                                                          (set! is-show #t))
+                                                          )]
+                                [parent (get-show-menu)]
+                                [shortcut #\m]
+                                [shortcut-prefix '(alt)]))
+        (set! *hide-plugin (new menu-item%
+                                [label "Hide the File Manager"]
+                                [callback (lambda (c e) (send area change-children
+                                                              (λ (x)
+                                                                (filter
+                                                                 (λ (x) (not (eq? real-area x))) x)))
+                                            (set! is-show #f))]
+                                [parent (get-show-menu)]
+                                [shortcut #\m]
+                                [shortcut-prefix '(alt ctl)]))
         (update-files!)
         (make-object vertical-panel% area))
       ))
