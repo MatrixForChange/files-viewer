@@ -9,11 +9,11 @@
   (export drracket:tool-exports^)
   (define phase1 void)
   (define phase2 void)
-  (define *change-directory #f)
   (define main-directory (if (get-preference 'files-viewer:directory)
                              (string->path (get-preference 'files-viewer:directory))
                              #f)
                              )
+  (define *change-directory #f)
   (define *files #f)
   (define (update-files!)
     (when (and main-directory (directory-exists? main-directory)) (send *files set (map (λ (x)
@@ -38,7 +38,7 @@
                                                  (update-files!)))]
                                    [min-width 290]
                                    ))
-        (set! *files (new list-box% [label "Files"]
+        (set! *files (new list-box% [label ""]
                           [parent real-area]
                           [choices '()]
                           [callback (lambda (c e)
