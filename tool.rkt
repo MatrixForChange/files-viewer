@@ -1,6 +1,7 @@
 #lang racket
 (require racket/gui drracket/tool
-         "private/path-helpers.rkt")
+         "private/path-helpers.rkt"
+         "private/gui-helpers.rkt")
 (provide tool@)
 
 
@@ -16,9 +17,9 @@
   (define *change-directory #f)
   (define *files #f)
   (define (update-files!)
-    (when (and main-directory (directory-exists? main-directory)) (send *files set (map (λ (x)
-                                (path-/string x main-directory))
-                              (find-files file-exists? main-directory)))))
+    (when (and main-directory (directory-exists? main-directory))
+      (send *files set-dir! main-directory)
+      (send *files update-files!)))
   (define drracket-frame-mixin
     (mixin (drracket:unit:frame<%>) ()
       (super-new)
@@ -36,17 +37,13 @@
                                                  (put-preferences '(files-viewer:directory)
                                                                   (list (path->string dir)))
                                                  (update-files!)))]
-                                   [min-width 290]
+                                   [min-width 300]
                                    ))
-        (set! *files (new list-box% [label ""]
+        (set! *files (new directory-list% 
                           [parent real-area]
-                          [choices '()]
-                          [callback (lambda (c e)
-                                      (define index (send c get-selection))
-                                      (when index
-                                      (send this change-to-file (string-append
-                                       (path->string main-directory)
-                                       (send c get-string index))))
+                          [select-callback (lambda (i)
+                                      (send this change-to-file
+                                       (send i user-data))
                                       )]))
         (update-files!)
         (make-object vertical-panel% area))
