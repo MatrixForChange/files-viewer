@@ -52,8 +52,8 @@
         (set! *show-plugin (new menu-item%
                                 [label "Show the File Manager"]
                                 [callback (lambda (c e) (unless is-show
-                                                          (send area add-child
-                                                              real-area)
+                                                          (send area change-children
+                                                              (lambda (x) (cons real-area x)))
                                                           (set! is-show #t))
                                                           )]
                                 [parent (get-show-menu)]
