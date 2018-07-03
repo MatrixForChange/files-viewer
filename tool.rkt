@@ -1,5 +1,6 @@
 #lang racket
 (require racket/gui drracket/tool
+         framework
          "private/path-helpers.rkt"
          "private/gui-helpers.rkt")
 (provide tool@)
@@ -28,20 +29,26 @@
       (super-new)
       (inherit get-show-menu)
       (define/override (get-definitions/interactions-panel-parent)
-        (define area (new horizontal-panel% [parent (super get-definitions/interactions-panel-parent)]
-                         ))
+        (define area (new my-horizontal-dragable% [parent (super get-definitions/interactions-panel-parent)]
+                     ))
         (define real-area (new vertical-panel% [parent area]
-                               [stretchable-width #f]))
+                               ))
         (set! *change-directory (new button% [label "Change the Directory"]
                                    [parent real-area]
                                    [callback (lambda (b e)
+                                               (let/ec exit
                                                (define dir (get-directory))
+                                               (with-handlers ([exn:fail?
+                                                                (λ (e)
+                                                                  (message-box "error" "can't open the directory")
+                                                                  (exit))])
+                                                 (find-files (lambda (_) #t)
+                                                             dir))
                                                (when dir
                                                  (set! main-directory dir)
                                                  (put-preferences '(files-viewer:directory)
                                                                   (list (path->string dir)))
-                                                 (update-files!)))]
-                                   [min-width 300]
+                                                 (update-files!))))]
                                    ))
         (set! *files (new directory-list% 
                           [parent real-area]
@@ -57,8 +64,7 @@
                                                           (set! is-show #t))
                                                           )]
                                 [parent (get-show-menu)]
-                                [shortcut #\m]
-                                [shortcut-prefix '(alt)]))
+                                ))
         (set! *hide-plugin (new menu-item%
                                 [label "Hide the File Manager"]
                                 [callback (lambda (c e) (send area change-children
@@ -66,9 +72,7 @@
                                                                 (filter
                                                                  (λ (x) (not (eq? real-area x))) x)))
                                             (set! is-show #f))]
-                                [parent (get-show-menu)]
-                                [shortcut #\m]
-                                [shortcut-prefix '(alt ctl)]))
+                                [parent (get-show-menu)]))
         (update-files!)
         (make-object vertical-panel% area))
       ))

@@ -1,7 +1,16 @@
 #lang racket
-(require mrlib/hierlist racket/gui)
-(provide directory-list%)
+(require mrlib/hierlist racket/gui framework)
+(provide directory-list% my-horizontal-dragable%)
 
+
+(define my-horizontal-dragable%
+  (class panel:horizontal-dragable%
+      (define/augment (get-default-percentages i)
+                         (cond
+                           [(= i 2) 
+                            (list #e0.15 #e0.85)]
+                           [else (build-list i (λ (x) (/ i)))]))
+    (super-new)))
 (define text-mixin
   (mixin (hierarchical-list-item<%>)
     ((interface () set-text get-text))
