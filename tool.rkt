@@ -41,19 +41,19 @@
         (set! *popup-menu (new files-popup-menu%
                                [change-the-directory-callback
                                 (thunk
-                                  (let/ec exit
-                                    (define dir (get-directory))
-                                    (with-handlers ([exn:fail?
-                                                     (λ (e)
-                                                       (exit
-                                                        (message-box "error" "can't open the directory")))])
-                                      (find-files (lambda (_) #t)
-                                                  dir))
-                                    (when dir
-                                      (set! main-directory dir)
-                                      (put-preferences '(files-viewer:directory)
-                                                       (list (path->string dir)))
-                                      (update-files!))))]
+                                 (let/ec exit
+                                   (define dir (get-directory))
+                                   (when dir
+                                     (with-handlers ([exn:fail?
+                                                      (λ (e)
+                                                        (exit
+                                                         (message-box "error" "can't open the directory")))])
+                                       (find-files (lambda (_) #t)
+                                                   dir))
+                                     (set! main-directory dir)
+                                     (put-preferences '(files-viewer:directory)
+                                                      (list (path->string dir)))
+                                     (update-files!))))]
                                [refresh-callback (thunk (update-files!))]
                                [new-file-callback (thunk (define item (send *files get-selected))
                                                          (define p (if item (send item user-data) main-directory))
