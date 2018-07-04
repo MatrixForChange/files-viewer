@@ -52,18 +52,7 @@
                                                                       (list (path->string dir)))
                                                      (update-files!))))]
                                      ))
-        (set! *files (new directory-list% 
-                          [parent real-area]
-                          [select-callback (lambda (i)
-                                             (let/ec exit
-                                               (define ref (hash-ref file-tab-recorder i #f))
-                                               (when ref (exit (change-to-tab ref))) 
-                                               (when (send (get-current-tab) can-close?)
-                                                 (exit (change-to-file i)))
-                                               (open-in-new-tab i)
-                                               (hash-set! file-tab-recorder i (get-current-tab))
-                                               )
-                                             )]))
+        
         (set! *show-plugin (new menu-item%
                                 [label "Show the File Manager"]
                                 [callback (lambda (c e) (unless is-show
