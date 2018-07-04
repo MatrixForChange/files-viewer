@@ -11,12 +11,13 @@
   (export drracket:tool-exports^)
   (define phase1 void)
   (define phase2 void)
-  (define main-directory (if (get-preference 'files-viewer:directory)
-                             (string->path (get-preference 'files-viewer:directory))
-                             #f)
+  (define main-directory (let ()
+                           (define main-dir (get-preference 'files-viewer:directory))
+                           (if (directory-exists? main-dir)
+                               main-dir
+                               #f))
     )
   (define is-show #t)
-  (define file-tab-recorder (make-hash))
   (define *change-directory #f)
   (define *files #f)
   (define *show-plugin #f)
@@ -29,13 +30,14 @@
     (mixin (drracket:unit:frame<%> (class->interface drracket:unit:frame%)) ()
       (super-new)
       (inherit get-show-menu change-to-file change-to-tab create-new-tab
-               get-current-tab open-in-new-tab)
+               get-current-tab open-in-new-tab find-matching-tab)
       (define/override (get-definitions/interactions-panel-parent)
         (define area (new my-horizontal-dragable% [parent (super get-definitions/interactions-panel-parent)]
                           ))
         (define real-area (new vertical-panel% [parent area]
                                ))
-        (set! *change-directory (new button% [label "Change the Directory"]
+        (set! *change-directory (new button%
+                                     [label "Change the Directory"]
                                      [parent real-area]
                                      [callback (lambda (b e)
                                                  (let/ec exit
@@ -65,14 +67,11 @@
         (set! *files (new directory-list% 
                           [parent real-area]
                           [select-callback (lambda (i)
-                                             (let/ec exit
-                                               (define ref (hash-ref file-tab-recorder i #f))
-                                               (when ref (exit (change-to-tab ref))) 
-                                               (when (send (get-current-tab) can-close?)
-                                                 (exit (change-to-file i)))
-                                               (open-in-new-tab i)
-                                               (hash-set! file-tab-recorder i (get-current-tab))
-                                               )
+                                             (when (file-exists? i)
+                                               (cond
+                                                 [(find-matching-tab i) => change-to-tab]
+                                                 [(not (send (send (get-current-tab)  get-defs) is-modified?)) (change-to-file i)]
+                                                 [else (open-in-new-tab i)]))
                                              )]))
         (set! *hide-plugin (new menu-item%
                                 [label "Hide the File Manager"]
