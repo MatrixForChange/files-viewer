@@ -62,6 +62,18 @@
                                             )]
                                 [parent (get-show-menu)]
                                 ))
+        (set! *files (new directory-list% 
+                          [parent real-area]
+                          [select-callback (lambda (i)
+                                             (let/ec exit
+                                               (define ref (hash-ref file-tab-recorder i #f))
+                                               (when ref (exit (change-to-tab ref))) 
+                                               (when (send (get-current-tab) can-close?)
+                                                 (exit (change-to-file i)))
+                                               (open-in-new-tab i)
+                                               (hash-set! file-tab-recorder i (get-current-tab))
+                                               )
+                                             )]))
         (set! *hide-plugin (new menu-item%
                                 [label "Hide the File Manager"]
                                 [callback (lambda (c e) (send area change-children
