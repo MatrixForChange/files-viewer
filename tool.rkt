@@ -15,7 +15,7 @@
   (define phase2 void)
   (define main-directory (let ()
                            (define main-dir (get-preference 'files-viewer:directory))
-                           (if (directory-exists? main-dir)
+                           (if (and main-dir (directory-exists? main-dir))
                                main-dir
                                #f))
     )
