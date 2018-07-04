@@ -2,7 +2,9 @@
 (require racket/gui drracket/tool
          framework
          "private/path-helpers.rkt"
-         "private/gui-helpers.rkt")
+         "private/gui-helpers.rkt"
+         "private/popup-menu.rkt"
+         "private/file-filters.rkt")
 (provide tool@)
 
 
@@ -18,7 +20,7 @@
                                #f))
     )
   (define is-show #t)
-  (define *change-directory #f)
+  (define *popup-menu #f)
   (define *files #f)
   (define *show-plugin #f)
   (define *hide-plugin #f)
@@ -36,24 +38,35 @@
                           ))
         (define real-area (new vertical-panel% [parent area]
                                ))
-        (set! *change-directory (new button%
-                                     [label "Change the Directory"]
-                                     [parent real-area]
-                                     [callback (lambda (b e)
-                                                 (let/ec exit
-                                                   (define dir (get-directory))
-                                                   (with-handlers ([exn:fail?
-                                                                    (λ (e)
-                                                                      (message-box "error" "can't open the directory")
-                                                                      (exit))])
-                                                     (find-files (lambda (_) #t)
-                                                                 dir))
-                                                   (when dir
-                                                     (set! main-directory dir)
-                                                     (put-preferences '(files-viewer:directory)
-                                                                      (list (path->string dir)))
-                                                     (update-files!))))]
-                                     ))
+        (set! *popup-menu (new files-popup-menu%
+                               [change-the-directory-callback
+                                (thunk
+                                  (let/ec exit
+                                    (define dir (get-directory))
+                                    (with-handlers ([exn:fail?
+                                                     (λ (e)
+                                                       (message-box "error" "can't open the directory")
+                                                       (exit))])
+                                      (find-files (lambda (_) #t)
+                                                  dir))
+                                    (when dir
+                                      (set! main-directory dir)
+                                      (put-preferences '(files-viewer:directory)
+                                                       (list (path->string dir)))
+                                      (update-files!))))]
+                               [refresh-callback (thunk (update-files!))]
+                               [new-file-callback (thunk (define item (send *files get-selected))
+                                                         (define p (if item (send item user-data) main-directory))
+                                                         (new-file-dialog this p)
+                                                         (update-files!))]
+                               [delete-file-callback (thunk (define item (send *files get-selected))
+                                                            (if item (begin
+                                                                       (delete-file (send item user-data))
+                                                                       (update-files!))
+                                                                (message-box "error" "no file to delete.")))]
+                               [file-filter-callback (thunk (filter-dialog this)
+                                                            (update-files!))]
+                               ))
         
         (set! *show-plugin (new menu-item%
                                 [label "Show the File Manager"]
@@ -72,7 +85,9 @@
                                                  [(find-matching-tab i) => change-to-tab]
                                                  [(not (send (send (get-current-tab)  get-defs) is-modified?)) (change-to-file i)]
                                                  [else (open-in-new-tab i)]))
-                                             )]))
+                                             )]
+                          [my-popup-menu *popup-menu]
+                          ))
         (set! *hide-plugin (new menu-item%
                                 [label "Hide the File Manager"]
                                 [callback (lambda (c e) (send area change-children

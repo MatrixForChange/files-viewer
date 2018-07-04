@@ -1,10 +1,56 @@
 #lang racket
-(provide path-/string)
-(require rackunit)
+(provide path-/string new-file-dialog)
+(require rackunit racket/gui syntax/parse/define (for-syntax racket/syntax)
+         "content.rkt")
 (define (path-/string p1 p2)
   (define s1 (path->string p1))
   (define s2 (path->string p2))
   (substring s1 (string-length s2)))
+
+(define (create-new-file path name content)
+  (define new-name (if (file-exists? path)
+                       (simplify-path (build-path path 'up name))
+                       (build-path path name)))
+  (if (file-exists? new-name)
+      (message-box "error" "File exists,can't create!")
+      (let ([p (open-output-file new-name)])
+        (display content p)
+        (close-output-port p))))
+
+(define (new-file-dialog dparent current-path)
+  (define d (new dialog% [label "Create New File"]
+                 [width 430]
+                 [height 200]
+                 [parent dparent]))
+  (define name (new text-field% [label "File Name(without Suffix):"]
+                    [parent d]))
+  (define-simple-macro (define-file-kind kind-name desc:str suffix:str)
+    #:with content-name (format-id #'here "~a-content" #'kind-name)
+    (define kind-name (new button% [label desc]
+                      [parent d] [stretchable-width #t]
+                      [callback (λ (c e)
+                                  (create-new-file current-path
+                                                   (string-append (send name get-value) suffix)
+                                                   content-name)
+                                  (send d show #f)
+                                  )])))
+
+  
+  (define-file-kind rkt-file "Racket Programs (*.rkt)" ".rkt")
+  (define-file-kind rkt-gui-file "Racket GUI Programs (*.rkt)" ".rkt")
+  (define-file-kind rkt-macro-file "Racket Programs with Macros (*.rkt)" ".rkt")
+  (define-file-kind markdown-file "Markdown Files (*.md)" ".md")
+  (define other (new button% [label "Other Files(with Suffix)"]
+                     [parent d][stretchable-width #t]
+                     [callback (λ (c e)
+                                  (create-new-file current-path
+                                                   (send name get-value)
+                                                   "")
+                                  (send d show #f)
+                                  )]))
+  (send d show #t)
+  )
+       
 
 (module+ test
   (check-equal? "minecraft" (path-/string (string->path "d:/minecraft")
