@@ -45,8 +45,8 @@
                                     (define dir (get-directory))
                                     (with-handlers ([exn:fail?
                                                      (λ (e)
-                                                       (message-box "error" "can't open the directory")
-                                                       (exit))])
+                                                       (exit
+                                                        (message-box "error" "can't open the directory")))])
                                       (find-files (lambda (_) #t)
                                                   dir))
                                     (when dir
