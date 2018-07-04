@@ -57,12 +57,11 @@
                           [select-callback (lambda (i)
                                              (let/ec exit
                                                (define ref (hash-ref file-tab-recorder i #f))
-                                               (when ref (exit (change-to-tab ref))) 
+                                               (when ref (exit (change-to-tab ref)))
                                                (when (send (get-current-tab) can-close?)
                                                  (exit (change-to-file i)))
                                                (open-in-new-tab i)
-                                               (hash-set! file-tab-recorder i (get-current-tab))
-                                               )
+                                               (hash-set! file-tab-recorder i (get-current-tab))) 
                                              )]))
         (set! *show-plugin (new menu-item%
                                 [label "Show the File Manager"]

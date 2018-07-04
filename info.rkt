@@ -6,4 +6,4 @@
 (define deps '("base" "gui-lib" "drracket"))
 (define drracket-tool-names (list "file-viewer"))
 (define drracket-tools (list (list "tool.rkt")))
-(define pkg-desc "file manager for racket")
+(define pkg-desc "file manager for racket") 

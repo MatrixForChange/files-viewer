@@ -55,7 +55,7 @@
         ))
 
     (define/override (on-select i)
-      (when i (select-callback i)))
+      (when i (select-callback (send i user-data))))
 
     
     ))
