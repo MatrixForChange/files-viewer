@@ -4,7 +4,8 @@
          "private/path-helpers.rkt"
          "private/gui-helpers.rkt"
          "private/popup-menu.rkt"
-         "private/file-filters.rkt")
+         "private/file-filters.rkt"
+         )
 (provide tool@)
 
 
@@ -19,7 +20,7 @@
                                main-dir
                                #f))
     )
-  (define is-show #t)
+  (define is-show (get-preference 'files-viewer:is-show))
   (define *popup-menu #f)
   (define *files #f)
   (define *show/hide-plugin #f)
@@ -37,6 +38,25 @@
                           ))
         (define real-area (new vertical-panel% [parent area]
                                ))
+        (set! *show/hide-plugin (new menu-item%
+                                     [label (if is-show "Hide the File Manager" "Show the File Manager")]
+                                     [callback (lambda (c e) (define is-show
+                                                               (get-preference 'files-viewer:is-show))
+                                                 (if is-show
+                                                     (let () (send area change-children
+                                                                   (λ (x)
+                                                                     (filter
+                                                                      (λ (x) (not (eq? real-area x))) x)))
+                                                       (put-preferences '(files-viewer:is-show) '(#f))
+                                                       (send c set-label "Show the File Manager"))
+                                                     (let ()
+                                                       (send area change-children
+                                                             (lambda (x) (cons real-area x)))
+                                                       (put-preferences '(files-viewer:is-show) '(#t))
+                                                       (send c set-label "Hide the File Manager")))
+                                                 )]
+                                     [parent (get-show-menu)]
+                                     ))
         (set! *popup-menu (new files-popup-menu%
                                [change-the-directory-callback
                                 (thunk
@@ -68,23 +88,7 @@
                                                             (update-files!))]
                                ))
         
-        (set! *show/hide-plugin (new menu-item%
-                                     [label "Hide the File Manager"]
-                                     [callback (lambda (c e) (if is-show
-                                                                 (let () (send area change-children
-                                                                               (λ (x)
-                                                                                 (filter
-                                                                                  (λ (x) (not (eq? real-area x))) x)))
-                                                                   (set! is-show #f)
-                                                                   (send c set-label "Show the File Manager"))
-                                                                 (let ()
-                                                                   (send area change-children
-                                                                         (lambda (x) (cons real-area x)))
-                                                                   (set! is-show #t)
-                                                                   (send c set-label "Hide the File Manager")))
-                                                 )]
-                                     [parent (get-show-menu)]
-                                     ))
+          
         (set! *files (new directory-list% 
                           [parent real-area]
                           [select-callback (lambda (i)
@@ -97,6 +101,11 @@
                           [my-popup-menu *popup-menu]
                           ))
         (update-files!)
+        (unless is-show
+          (send area change-children
+                (λ (x)
+                  (filter
+                   (λ (x) (not (eq? real-area x))) x))))
         (make-object vertical-panel% area))
       ))
   (drracket:get/extend:extend-unit-frame drracket-frame-mixin)
