@@ -68,7 +68,7 @@
     
     ))
 
-(module+ test
+(module+ test1
   (define f (new frame% [label "hierlist demo"][width 400][height 500]))
   (define dl (new directory-list% [parent f]))
   (send dl set-dir! "d:/minecraft")

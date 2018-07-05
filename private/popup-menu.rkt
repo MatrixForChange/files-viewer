@@ -17,6 +17,6 @@
     (define-menu-item file-filter "File Filter")
     ))
 
-(module+ test
+(module+ test1
   (new files-popup-menu% [change-the-directory-callback void]
        ))
