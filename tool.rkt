@@ -22,8 +22,7 @@
   (define is-show #t)
   (define *popup-menu #f)
   (define *files #f)
-  (define *show-plugin #f)
-  (define *hide-plugin #f)
+  (define *show/hide-plugin #f)
   (define (update-files!)
     (when (and main-directory (directory-exists? main-directory))
       (send *files set-dir! main-directory)
@@ -69,15 +68,23 @@
                                                             (update-files!))]
                                ))
         
-        (set! *show-plugin (new menu-item%
-                                [label "Show the File Manager"]
-                                [callback (lambda (c e) (unless is-show
-                                                          (send area change-children
-                                                                (lambda (x) (cons real-area x)))
-                                                          (set! is-show #t))
-                                            )]
-                                [parent (get-show-menu)]
-                                ))
+        (set! *show/hide-plugin (new menu-item%
+                                     [label "Hide the File Manager"]
+                                     [callback (lambda (c e) (if is-show
+                                                                 (let () (send area change-children
+                                                                               (λ (x)
+                                                                                 (filter
+                                                                                  (λ (x) (not (eq? real-area x))) x)))
+                                                                   (set! is-show #f)
+                                                                   (send c set-label "Show the File Manager"))
+                                                                 (let ()
+                                                                   (send area change-children
+                                                                         (lambda (x) (cons real-area x)))
+                                                                   (set! is-show #t)
+                                                                   (send c set-label "Hide the File Manager")))
+                                                 )]
+                                     [parent (get-show-menu)]
+                                     ))
         (set! *files (new directory-list% 
                           [parent real-area]
                           [select-callback (lambda (i)
@@ -89,14 +96,6 @@
                                              )]
                           [my-popup-menu *popup-menu]
                           ))
-        (set! *hide-plugin (new menu-item%
-                                [label "Hide the File Manager"]
-                                [callback (lambda (c e) (send area change-children
-                                                              (λ (x)
-                                                                (filter
-                                                                 (λ (x) (not (eq? real-area x))) x)))
-                                            (set! is-show #f))]
-                                [parent (get-show-menu)]))
         (update-files!)
         (make-object vertical-panel% area))
       ))
