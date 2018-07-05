@@ -2,14 +2,20 @@
 (require mrlib/hierlist racket/gui framework)
 (provide directory-list% my-horizontal-dragable%)
 
-
 (define my-horizontal-dragable%
   (class panel:horizontal-dragable%
+    (inherit get-percentages)
       (define/augment (get-default-percentages i)
                          (cond
-                           [(= i 2) 
-                            (list #e0.15 #e0.85)]
+                           [(= i 2)
+                            (define default-percentages (get-preference 'files-viewer:percentages))
+                            (if default-percentages default-percentages (list #e0.15 #e0.85))]
                            [else (build-list i (λ (x) (/ i)))]))
+    (define/augment (after-percentage-change)
+      (define current (get-percentages))
+      (when (= (length current) 2)
+        (put-preferences '(files-viewer:percentages) (list current)))
+      (inner (void) after-percentage-change))
     (super-new)))
 (define text-mixin
   (mixin (hierarchical-list-item<%>)

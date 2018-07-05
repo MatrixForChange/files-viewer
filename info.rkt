@@ -1,7 +1,7 @@
 #lang info
 (define collection "files-viewer")
 (define authors '("jiangqi"))
-(define version "0.00.10")
+(define version "0.00.11")
 (define package-content-state '(built "6.12"))
 (define deps '("base" "gui-lib" "drracket" "rackunit-lib"))
 (define drracket-tool-names (list "file-viewer"))

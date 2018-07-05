@@ -61,7 +61,7 @@
                                                          (update-files!))]
                                [delete-file-callback (thunk (define item (send *files get-selected))
                                                             (if item (begin
-                                                                       (delete-file-or-directory
+                                                                       (delete-file-and-not-directory
                                                                         (send item user-data))
                                                                        (update-files!))
                                                                 (message-box "error" "no file or directory to delete.")))]

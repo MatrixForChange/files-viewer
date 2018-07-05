@@ -1,5 +1,5 @@
 #lang racket
-(provide path-/string new-file-dialog delete-file-or-directory)
+(provide path-/string new-file-dialog delete-file-and-not-directory)
 (require rackunit racket/gui syntax/parse/define (for-syntax racket/syntax)
          "content.rkt")
 (define (path-/string p1 p2)
@@ -7,9 +7,9 @@
   (define s2 (path->string p2))
   (substring s1 (string-length s2)))
 
-(define (delete-file-or-directory path)
+(define (delete-file-and-not-directory path)
   (if (file-exists? path) (delete-file path)
-      (delete-directory path)))
+      (message-box "error" "not a file,can't delete it")))
 
 (define (create-new-file path name content)
   (define new-name (if (file-exists? path)

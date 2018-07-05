@@ -13,7 +13,7 @@
     (define-menu-item change-the-directory "Change the Directory")
     (define-menu-item refresh "Refresh")
     (define-menu-item new-file "New File")
-    (define-menu-item delete-file "Delete File or Directory")
+    (define-menu-item delete-file "Delete File")
     (define-menu-item file-filter "File Filter")
     ))
 
