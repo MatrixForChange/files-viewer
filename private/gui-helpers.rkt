@@ -5,32 +5,53 @@
 (define my-horizontal-dragable%
   (class panel:horizontal-dragable%
     (inherit get-percentages)
-      (define/augment (get-default-percentages i)
-                         (cond
-                           [(= i 2)
-                            (define default-percentages (get-preference 'files-viewer:percentages))
-                            (if default-percentages default-percentages (list #e0.15 #e0.85))]
-                           [else (build-list i (λ (x) (/ i)))]))
+    (define/augment (get-default-percentages i)
+      (cond
+        [(= i 2)
+         (define default-percentages (get-preference 'files-viewer:percentages))
+         (if default-percentages default-percentages (list #e0.15 #e0.85))]
+        [else (build-list i (λ (x) (/ i)))]))
     (define/augment (after-percentage-change)
       (define current (get-percentages))
       (when (= (length current) 2)
         (put-preferences '(files-viewer:percentages) (list current)))
       (inner (void) after-percentage-change))
     (super-new)))
-(define text-mixin
+(define simple-mixin
   (mixin (hierarchical-list-item<%>)
     ((interface () set-text get-text))
     (inherit get-editor)
     (super-new)
-    ; set-text: this sets the label of the item
     (define/public (set-text str)
-      (define t (get-editor)) ; a text% object
+      (define t (get-editor)) 
       (send t erase)
       (send t insert str))
     (define/public (get-text)
       (define t (get-editor))
       (send t get-text))
+    ))
 
+(define compound-mixin
+  (mixin (hierarchical-list-compound-item<%>)
+    ((interface () set-text get-text))
+    (inherit get-editor)
+    (super-new)
+    (define task void)
+    (define ran #f)
+    (define/public (set-text str)
+      (define t (get-editor))
+      (send t erase)
+      (send t insert str))
+    (define/public (get-text)
+      (define t (get-editor))
+      (send t get-text))
+    (define/public (set-task thunk)
+      (set! task thunk))
+
+    (define/public (run-task)
+      (unless ran
+        (task)
+        (set! ran #t)))
     ))
 
 
@@ -51,17 +72,25 @@
       (set! the-dir dir))
 
     (define (update-directory! parent dir filter-types)
-      (for ([i (directory-list dir)])
-        (unless (ormap (λ (x) (path-has-extension? i x)) filter-types)
-        (define is-directory (directory-exists? (build-path dir i)))
-        (define item (if is-directory
-                         (send parent new-list text-mixin)
-                         (send parent new-item text-mixin)))
-        (send item user-data (build-path dir i))
-        (send item set-text (path->string i))
-        (when is-directory
-          (update-directory! item (build-path dir i) filter-types)))
-        ))
+      (let/ec exit
+        (define files
+          (with-handlers ([exn:fail?
+                           (λ (e)
+                             (exit
+                              (message-box "error" "can't open the directory")))])
+            (directory-list
+             dir)))
+        (for ([i files])
+          (unless (ormap (λ (x) (path-has-extension? i x)) filter-types)
+            (define is-directory (directory-exists? (build-path dir i)))
+            (define item (if is-directory
+                             (send parent new-list compound-mixin)
+                             (send parent new-item simple-mixin)))
+            (send item user-data (build-path dir i))
+            (send item set-text (path->string i))
+            (when is-directory
+              (send item set-task (thunk (update-directory! item (build-path dir i) filter-types)))
+              )))))
 
     (define/override (on-select i)
       (when i (select-callback (send i user-data))))
@@ -71,6 +100,9 @@
         (popup-menu my-popup-menu (send ev get-x)
                     (send ev get-y)))
       )
+    (define/override (on-item-opened item)
+      (send item run-task)
+      (super on-item-opened item))
     
     ))
 
@@ -81,4 +113,3 @@
   (send dl update-files!)
   (send f show #t))
                                
-      

@@ -67,7 +67,7 @@
                                                       (λ (e)
                                                         (exit
                                                          (message-box "error" "can't open the directory")))])
-                                       (find-files (lambda (_) #t)
+                                       (directory-list
                                                    dir))
                                      (set! main-directory dir)
                                      (put-preferences '(files-viewer:directory)
