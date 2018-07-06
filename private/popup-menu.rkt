@@ -14,6 +14,7 @@
     (define-menu-item refresh "Refresh")
     (define-menu-item new-file "New File")
     (define-menu-item delete-file "Delete File")
+    (define-menu-item rename-file "Rename File or Directory")
     (define-menu-item file-filter "File Filter")
     ))
 

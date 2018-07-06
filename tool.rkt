@@ -5,6 +5,7 @@
          "private/gui-helpers.rkt"
          "private/popup-menu.rkt"
          "private/file-filters.rkt"
+         "private/rename-dialog.rkt"
          )
 (provide tool@)
 
@@ -83,10 +84,18 @@
                                                                        (delete-file-and-not-directory
                                                                         (send item user-data))
                                                                        (update-files!))
-                                                                (message-box "error" "no file or directory to delete.")))]
+                                                                (message-box "error" "no file to delete.")))]
                                [file-filter-callback (thunk (filter-dialog this)
                                                             (update-files!))]
-                               ))
+                               [rename-file-callback (thunk (define item (send *files get-selected))
+                                                            (if item (let ()
+                                                                       (define rd (new rename-dialog%
+                                                                                       [parent this]
+                                                                                       [path (send item user-data)]))
+                                                                       (send rd show #t)
+                                                                       (update-files!))
+                                                                (message-box "error" "no file or directory to rename."))
+                               )]))
         
           
         (set! *files (new directory-list% 
