@@ -95,7 +95,21 @@
                                                                        (send rd show #t)
                                                                        (update-files!))
                                                                 (message-box "error" "no file or directory to rename."))
-                               )]))
+                               )]
+                               [open-terminal-here-callback
+                                (thunk (define item (send *files get-selected))
+                                       (define cmd (get-preference 'files-viewer:cmd))
+                                       (define p (if item (send item user-data) main-directory))
+                                       (define path (if (file-exists? p) (simplify-path
+                                                                          (build-path p 'up))
+                                                        p))
+                                       (if cmd (process (format cmd path))
+                                           (message-box "error" "Command to Open Terminal Undefined")))]
+                               [terminal-config-callback
+                                (thunk (define cmd-config
+                                         (new cmd-dialog% [parent this]))
+                                       (send cmd-config show #t))]
+                               ))
         
           
         (set! *files (new directory-list% 

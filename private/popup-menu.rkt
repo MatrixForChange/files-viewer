@@ -12,10 +12,14 @@
                                [callback (λ (c e) (callback-name))]))))
     (define-menu-item change-the-directory "Change the Directory")
     (define-menu-item refresh "Refresh")
+    (new separator-menu-item% [parent this])
     (define-menu-item new-file "New File")
     (define-menu-item delete-file "Delete File")
     (define-menu-item rename-file "Rename File or Directory")
     (define-menu-item file-filter "File Filter")
+    (new separator-menu-item% [parent this])
+    (define-menu-item open-terminal-here "Open Terminal Here")
+    (define-menu-item terminal-config "Config for Terminal Launcher")
     ))
 
 (module+ test1
