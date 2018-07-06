@@ -60,8 +60,9 @@
     (init-field [select-callback void]
                 [my-popup-menu #f])
     (super-new)
+    (inherit delete-item get-items popup-menu allow-deselect)
     (define the-dir #f)
-    (inherit delete-item get-items popup-menu)
+    (allow-deselect #t)
     (define/public (update-files!)
       (define filter-types (get-preference 'files-viewer:filter-types))
       (for-each (λ (x) (delete-item x)) (get-items))
@@ -92,8 +93,15 @@
               (send item set-task (thunk (update-directory! item (build-path dir i) filter-types)))
               )))))
 
-    (define/override (on-select i)
-      (when i (select-callback (send i user-data))))
+    (define/override (on-double-select i)
+      (when i
+        (select-callback (send i user-data))
+        )
+      (super on-double-select i)
+      )
+
+    
+    
     (define/override (on-event ev)
       (super on-event ev)
       (when (send ev button-down? 'right)

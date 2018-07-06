@@ -1,6 +1,6 @@
 # File Manager for DrRacket
 
-latest version : 0.00.15
+latest version : 0.00.16
 
 
 to call the popup menu , right click the file manager.
