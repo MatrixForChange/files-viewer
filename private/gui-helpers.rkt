@@ -62,6 +62,7 @@
     (super-new)
     (inherit delete-item get-items popup-menu allow-deselect)
     (define the-dir #f)
+    (define opened (mutable-set))
     (allow-deselect #t)
     (define/public (update-files!)
       (define filter-types (get-preference 'files-viewer:filter-types))
@@ -91,6 +92,8 @@
             (send item set-text (path->string i))
             (when is-directory
               (send item set-task (thunk (update-directory! item (build-path dir i) filter-types)))
+              (when (set-member? opened (send item user-data))
+                (send item open))
               )))))
 
     (define/override (on-double-select i)
@@ -110,8 +113,11 @@
       )
     (define/override (on-item-opened item)
       (send item run-task)
+      (set-add! opened (send item user-data))
       (super on-item-opened item))
-    
+    (define/override (on-item-closed item)
+      (set-remove! opened (send item user-data))
+      (super on-item-closed item)) 
     ))
 
 

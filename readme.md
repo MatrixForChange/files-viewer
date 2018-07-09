@@ -1,7 +1,8 @@
 # File Manager for DrRacket
 
-latest version : 0.00.16
+latest version : 0.00.17
 
+to edit a file , double click the item. 
 
 to call the popup menu , right click the file manager.
  
