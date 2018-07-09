@@ -2,6 +2,13 @@
 (provide path-/string new-file-dialog delete-file-and-directory)
 (require rackunit racket/gui syntax/parse/define (for-syntax racket/syntax)
          "content.rkt")
+
+(define (process/safe cmd)
+  (match-define (list in1 out _ in2 _) (process cmd))
+  (close-input-port in1)
+  (close-input-port in2)
+  (close-output-port out))
+
 (define (path-/string p1 p2)
   (define s1 (path->string p1))
   (define s2 (path->string p2))
