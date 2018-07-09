@@ -1,5 +1,7 @@
 # File Manager for DrRacket
 the project is under LGPL LICENSE (same as Racket).
+
+Issues and pull requests are welcomed.  
  
 latest version : 0.00.21  
 
