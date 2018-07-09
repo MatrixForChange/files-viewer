@@ -7,11 +7,18 @@
   (define s2 (path->string p2))
   (substring s1 (string-length s2)))
 
-(define (delete-file-and-directory path)
+(define (delete-file-and-directory dparent path)
+  (match (message-box "File Manager"
+               (format "Are you sure to delete ~a" path)
+               dparent '(ok-cancel))
+    ['ok (delete-file-and-directory/recur path)]
+    ['cancel (void)]))
+
+(define (delete-file-and-directory/recur path)
   (if (file-exists? path) (delete-file path)
       (begin
       (for ([i (in-directory path)])
-        (delete-file-and-directory i))
+        (delete-file-and-directory/recur i))
       (delete-directory path))
         ))
 
