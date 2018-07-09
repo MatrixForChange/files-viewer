@@ -1,5 +1,5 @@
 #lang racket
-(require mrlib/hierlist racket/gui framework mrlib/include-bitmap file/glob)
+(require "../hierlist/hierlist.rkt" racket/gui framework mrlib/include-bitmap file/glob)
 (provide directory-list% my-horizontal-dragable%)
 
 (define my-horizontal-dragable%
@@ -29,6 +29,8 @@
       (define s (make-object image-snip%))
       (send s set-bitmap (if (is-racket? str) racket-icon normal-icon))
       s)))
+
+(define arrow-snip (make-object image-snip% "arrow.png"))
 
 (define simple-mixin
   (mixin (hierarchical-list-item<%>)
@@ -69,6 +71,8 @@
       (unless ran
         (task)
         (set! ran #t)))
+    (define/override (get-arrow-snip)
+      arrow-snip)
     ))
 
 

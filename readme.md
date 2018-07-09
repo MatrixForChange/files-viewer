@@ -1,6 +1,7 @@
 # File Manager for DrRacket
-
-latest version : 0.00.20
+the project is under LGPL LICENSE (same as Racket).
+ 
+latest version : 0.00.21  
 
 to edit a file , double click the item. 
 
