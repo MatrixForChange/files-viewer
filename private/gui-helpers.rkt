@@ -1,5 +1,5 @@
 #lang racket
-(require mrlib/hierlist racket/gui framework racket/runtime-path file/glob)
+(require mrlib/hierlist racket/gui framework mrlib/include-bitmap file/glob)
 (provide directory-list% my-horizontal-dragable%)
 
 (define my-horizontal-dragable%
@@ -19,19 +19,15 @@
     (super-new)))
 
 ;;; generated using https://gist.github.com/yjqww6/a102dffb7e2ad00685a60da5e7469f88
-(define-runtime-path racket-icon "doc.png")
-(define-runtime-path normal-icon "normal.png")
+(define racket-icon (include-bitmap "doc.png" 'png/mask))
+(define normal-icon (include-bitmap "normal.png" 'png/mask))
 (define file-icon-snip
-  (let ([r (make-object bitmap% 1 1)]
-        [n (make-object bitmap% 1 1)]
-        [g '("*.rkt" "*.scrbl" "*.rktl" "*.rktd" "*.ss" "*.scm")])
-    (send r load-file racket-icon)
-    (send n load-file normal-icon)
+  (let ([g '("*.rkt" "*.scrbl" "*.rktl" "*.rktd" "*.ss" "*.scm")])
     (λ (str)
       (define (is-racket? name)
         (glob-match? g name))
       (define s (make-object image-snip%))
-      (send s set-bitmap (if (is-racket? str) r n))
+      (send s set-bitmap (if (is-racket? str) racket-icon normal-icon))
       s)))
 
 (define simple-mixin
