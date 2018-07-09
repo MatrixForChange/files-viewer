@@ -1,5 +1,5 @@
 #lang racket
-(provide path-/string new-file-dialog delete-file-and-not-directory)
+(provide path-/string new-file-dialog delete-file-and-directory)
 (require rackunit racket/gui syntax/parse/define (for-syntax racket/syntax)
          "content.rkt")
 (define (path-/string p1 p2)
@@ -7,9 +7,9 @@
   (define s2 (path->string p2))
   (substring s1 (string-length s2)))
 
-(define (delete-file-and-not-directory path)
+(define (delete-file-and-directory path)
   (if (file-exists? path) (delete-file path)
-      (message-box "error" "not a file,can't delete it")))
+      (delete-directory path)))
 
 (define (create-new-file path name content)
   (define new-name (if (file-exists? path)
@@ -39,6 +39,14 @@
                                   (send d show #f)
                                   )])))
 
+  (define dir (new button% [label "Directory"]
+                     [parent d][stretchable-width #t]
+                     [callback (λ (c e)
+                                 (with-handlers
+                                     ([exn:fail:filesystem? (λ (e)
+                                                              (message-box "error" "fail to create directory here"))])
+                                      (make-directory (build-path current-path (send name get-value))))
+                                 (send d show #f))]))
   
   (define-file-kind rkt-file "Racket Programs (*.rkt)" ".rkt")
   (define-file-kind rkt-gui-file "Racket GUI Programs (*.rkt)" ".rkt")

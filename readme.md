@@ -1,6 +1,6 @@
 # File Manager for DrRacket
 
-latest version : 0.00.17
+latest version : 0.00.18 BETA
 
 to edit a file , double click the item. 
 
