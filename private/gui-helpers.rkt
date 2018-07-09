@@ -30,7 +30,6 @@
       (send s set-bitmap (if (is-racket? str) racket-icon normal-icon))
       s)))
 
-(define arrow-snip (make-object image-snip% "arrow.png"))
 
 (define simple-mixin
   (mixin (hierarchical-list-item<%>)
@@ -60,6 +59,7 @@
     (define/public (set-text str)
       (define t (get-editor))
       (send t erase)
+      (send t insert " ")
       (send t insert str))
     (define/public (get-text)
       (define t (get-editor))
@@ -71,8 +71,6 @@
       (unless ran
         (task)
         (set! ran #t)))
-    (define/override (get-arrow-snip)
-      arrow-snip)
     ))
 
 
