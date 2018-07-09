@@ -12,7 +12,7 @@
     @(filebox (path->string (file-name-from-path file)) "")
     @(codeblock (file->string file))))
 
-@title{Quickscript, a scripting plugin for DrRacket}
+@title{Files-viewer is a file manager plugin for DrRacket.}
 
 @;author{风变科技-矩阵工作室}
 @(smaller (author+email "风变科技-矩阵工作室" "bling@forchange.cn" #:obfuscate? #t))
