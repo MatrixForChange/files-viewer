@@ -1,5 +1,6 @@
 #lang racket
-(provide path-/string new-file-dialog delete-file-and-directory)
+(provide path-/string new-file-dialog delete-file-and-directory
+         process/safe)
 (require rackunit racket/gui syntax/parse/define (for-syntax racket/syntax)
          "content.rkt")
 
