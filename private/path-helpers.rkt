@@ -9,7 +9,11 @@
 
 (define (delete-file-and-directory path)
   (if (file-exists? path) (delete-file path)
-      (delete-directory path)))
+      (begin
+      (for ([i (in-directory path)])
+        (delete-file-and-directory i))
+      (delete-directory path))
+        ))
 
 (define (create-new-file path name content)
   (define new-name (if (file-exists? path)
