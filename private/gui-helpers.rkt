@@ -1,5 +1,5 @@
 #lang racket
-(require mrlib/hierlist racket/gui framework)
+(require mrlib/hierlist racket/gui framework racket/runtime-path file/glob)
 (provide directory-list% my-horizontal-dragable%)
 
 (define my-horizontal-dragable%
@@ -17,14 +17,34 @@
         (put-preferences '(files-viewer:percentages) (list current)))
       (inner (void) after-percentage-change))
     (super-new)))
+
+;;; generated using https://gist.github.com/yjqww6/a102dffb7e2ad00685a60da5e7469f88
+(define-runtime-path racket-icon "doc.png")
+(define-runtime-path normal-icon "normal.png")
+(define file-icon-snip
+  (let ([r (make-object bitmap% 1 1)]
+        [n (make-object bitmap% 1 1)]
+        [g '("*.rkt" "*.scrbl" "*.rktl" "*.rktd" "*.ss" "*.scm")])
+    (send r load-file racket-icon)
+    (send n load-file normal-icon)
+    (λ (str)
+      (define (is-racket? name)
+        (glob-match? g name))
+      (define s (make-object image-snip%))
+      (send s set-bitmap (if (is-racket? str) r n))
+      s)))
+
 (define simple-mixin
   (mixin (hierarchical-list-item<%>)
     ((interface () set-text get-text))
     (inherit get-editor)
     (super-new)
+    
+
     (define/public (set-text str)
-      (define t (get-editor)) 
+      (define t (get-editor))
       (send t erase)
+      (send t insert (file-icon-snip str))
       (send t insert str))
     (define/public (get-text)
       (define t (get-editor))
