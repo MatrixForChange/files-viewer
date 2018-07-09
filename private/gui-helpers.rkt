@@ -45,6 +45,7 @@
       (define t (get-editor))
       (send t erase)
       (send t insert (file-icon-snip str))
+      (send t insert " ")
       (send t insert str))
     (define/public (get-text)
       (define t (get-editor))
