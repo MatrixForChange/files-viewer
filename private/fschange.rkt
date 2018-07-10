@@ -1,11 +1,13 @@
 #lang racket
 
-(provide/contract [fschange% (class/c [shutdown (->m void?)]
-                                      [change-dirs (->m (listof path-string?) void?)])])
+(provide/contract
+ [fschange%
+  (class/c [shutdown (->m void?)]
+           [change-dirs (->m (listof path-string?) void?)]
+           [need-update?! (->m boolean?)])])
 
 (define fschange%
   (class object%
-    (init callback [interval 1])
     
     (define dirs (set))
     (define sema (make-semaphore 0))
@@ -51,15 +53,10 @@
                  =>
                  (λ (evt) (loop (hash-set dirs+evts changed-dir evt)))]
                 [else
-                 (loop (hash-remove dirs+evts changed-dir))])]))))
-      (thread
-       (λ ()
-         (let loop ()
-           (sleep interval)
-           (when (box-cas! changed #t #f)
-             ;(log-info  "~a" 'called)
-             (callback))
-           (loop)))))
+                 (loop (hash-remove dirs+evts changed-dir))])])))))
+
+    (define/public (need-update?!)
+      (box-cas! changed #t #f))
 
     (define/public (shutdown)
       (custodian-shutdown-all cust)

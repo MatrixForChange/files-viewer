@@ -28,7 +28,13 @@
         )
 
       (define auto-refresh? (get-preference 'files-viewer:auto-refresh))
-      (define fschange (new fschange% [callback (λ () (queue-callback (λ () (send *files update-files!))))]))
+      (define fschange (new fschange%))
+      (define fschange-timer
+        (new timer%
+             [notify-callback
+              (λ () (when (send fschange need-update?!)
+                      (update-files!)))]
+             [interval 1000]))
       
       (define is-show (get-preference 'files-viewer:is-show))
       (define *popup-menu #f)
