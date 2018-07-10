@@ -6,6 +6,7 @@
          "private/popup-menu.rkt"
          "private/file-filters.rkt"
          "private/rename-dialog.rkt"
+         "private/fschange.rkt"
          )
 (provide tool@)
 
@@ -25,6 +26,9 @@
                                    main-dir
                                    #f))
         )
+
+      (define auto-refresh? (get-preference 'files-viewer:auto-refresh))
+      (define fschange (new fschange% [callback (λ () (queue-callback (λ () (send *files update-files!))))]))
       
       (define is-show (get-preference 'files-viewer:is-show))
       (define *popup-menu #f)
@@ -33,25 +37,31 @@
       (define (update-files!)
         (when (and main-directory (directory-exists? main-directory))
           (send *files set-dir! main-directory)
-          (send *files update-files!)))
+          (send *files update-files!)
+          (update-fschange)))
       (define (change-to-directory dir)
-          (let/ec exit
-            (when dir
-              (with-handlers ([exn:fail?
-                               (λ (e)
-                                 (exit
-                                  (message-box "error" "can't open the directory")))])
-                (directory-list
-                 dir))
-              (set! main-directory dir)
-              (put-preferences '(files-viewer:directory)
-                               (list (~a dir)))
-              (update-files!))))
+        (let/ec exit
+          (when dir
+            (with-handlers ([exn:fail?
+                             (λ (e)
+                               (exit
+                                (message-box "error" "can't open the directory")))])
+              (directory-list
+               dir))
+            (set! main-directory dir)
+            (put-preferences '(files-viewer:directory)
+                             (list (~a dir)))
+            (update-files!))))
       (unless main-directory (change-to-directory (find-system-path 'home-dir)))
 
       
       (inherit get-show-menu change-to-file change-to-tab create-new-tab
                get-current-tab open-in-new-tab find-matching-tab)
+
+      (define/private (update-fschange)
+        (when auto-refresh?
+          (send fschange change-dirs (send *files get-opened-inside))))
+      
       (define/override (get-definitions/interactions-panel-parent)
         (define area (new my-horizontal-dragable% [parent (super get-definitions/interactions-panel-parent)]
                           ))
@@ -128,6 +138,14 @@
                                          (unless (directory-exists?
                                                   (send item user-data)) (exit (message-box "error" "not a directory")))
                                          (change-to-directory (send item user-data))))]
+                               [auto-refresh-status auto-refresh?]
+                               [auto-refresh-callback
+                                (λ (v)
+                                  (set! auto-refresh? v)
+                                  (put-preferences '(files-viewer:auto-refresh) (list v))
+                                  (if v
+                                      (update-fschange)
+                                      (send fschange change-dirs '())))]
                                ))
         
           
@@ -141,6 +159,7 @@
                                                  [else (open-in-new-tab i)]))
                                              )]
                           [my-popup-menu *popup-menu]
+                          [opened-change-callback (λ () (update-fschange))]
                           ))
         (update-files!)
         (unless is-show
@@ -149,6 +168,10 @@
                   (filter
                    (λ (x) (not (eq? real-area x))) x))))
         (make-object vertical-panel% area))
+      
+
+      (define/augment (on-close)
+        (send fschange shutdown))
       (super-new)
       ))
   (drracket:get/extend:extend-unit-frame drracket-frame-mixin)

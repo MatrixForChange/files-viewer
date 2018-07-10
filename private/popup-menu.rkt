@@ -22,7 +22,23 @@
     (new separator-menu-item% [parent this])
     (define-menu-item open-terminal-here "Open Terminal Here")
     (define-menu-item terminal-config "Config for Terminal Launcher")
+    
+    (new separator-menu-item% [parent this])
+    
+    (init-field [auto-refresh-status #f]
+                [auto-refresh-callback void])
+    (define auto-refresh
+      (new menu-item% [label (refresh-label auto-refresh-status)]
+           [parent this]
+           [callback (λ (c e)
+                       (set! auto-refresh-status (not auto-refresh-status))
+                       (send auto-refresh set-label (refresh-label auto-refresh-status))
+                       (auto-refresh-callback auto-refresh-status))]))
     ))
+
+
+(define (refresh-label v)
+  (if v "Disable Auto Refresh" "Enable Auto Refresh"))
 
 (module+ test1
   (new files-popup-menu% [change-the-directory-callback void]
