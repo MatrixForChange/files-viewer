@@ -39,6 +39,19 @@
                           ))
         (define real-area (new vertical-panel% [parent area]
                                ))
+        (define (change-to-directory dir)
+          (let/ec exit
+            (when dir
+              (with-handlers ([exn:fail?
+                               (λ (e)
+                                 (exit
+                                  (message-box "error" "can't open the directory")))])
+                (directory-list
+                 dir))
+              (set! main-directory dir)
+              (put-preferences '(files-viewer:directory)
+                               (list (~a dir)))
+              (update-files!))))
         (set! *show/hide-plugin (new menu-item%
                                      [label (if is-show "Hide the File Manager" "Show the File Manager")]
                                      [callback (lambda (c e) (define is-show
@@ -61,19 +74,8 @@
         (set! *popup-menu (new files-popup-menu%
                                [change-the-directory-callback
                                 (thunk
-                                 (let/ec exit
-                                   (define dir (get-directory))
-                                   (when dir
-                                     (with-handlers ([exn:fail?
-                                                      (λ (e)
-                                                        (exit
-                                                         (message-box "error" "can't open the directory")))])
-                                       (directory-list
-                                                   dir))
-                                     (set! main-directory dir)
-                                     (put-preferences '(files-viewer:directory)
-                                                      (list (path->string dir)))
-                                     (update-files!))))]
+                                 (change-to-directory (get-directory))
+                                 )]
                                [refresh-callback (thunk (update-files!))]
                                [new-file-callback (thunk (define item (send *files get-selected))
                                                          (define p (if item (send item user-data) main-directory))
@@ -82,7 +84,7 @@
                                [delete-file-callback (thunk (define item (send *files get-selected))
                                                             (if item (begin
                                                                        (delete-file-and-directory this
-                                                                        (send item user-data))
+                                                                                                  (send item user-data))
                                                                        (update-files!))
                                                                 (message-box "error" "nothing to delete.")))]
                                [file-filter-callback (thunk (filter-dialog this)
@@ -95,7 +97,7 @@
                                                                        (send rd show #t)
                                                                        (update-files!))
                                                                 (message-box "error" "no file or directory to rename."))
-                               )]
+                                                            )]
                                [open-terminal-here-callback
                                 (thunk (define item (send *files get-selected))
                                        (define cmd (get-preference 'files-viewer:cmd))
@@ -109,28 +111,39 @@
                                 (thunk (define cmd-config
                                          (new cmd-dialog% [parent this]))
                                        (send cmd-config show #t))]
-                               ))
+                               [parent-directory-callback
+                                (thunk (when main-directory
+                                         (change-to-directory
+                                          (simplify-path (build-path main-directory 'up)))))]
+                               [change-to-this-directory-callback
+                                (thunk (let/ec exit
+                                         (define item (send *files get-selected))
+                                         (unless item (exit (message-box "error" "nothing is selected")))
+                                         (unless (directory-exists?
+                                                  (send item user-data)) (exit (message-box "error" "not a directory")))
+                                         (change-to-directory (send item user-data))))]
+))
         
           
-        (set! *files (new directory-list% 
-                          [parent real-area]
-                          [select-callback (lambda (i)
-                                             (when (file-exists? i)
-                                               (cond
-                                                 [(find-matching-tab i) => change-to-tab]
-                                                 [(not (send (send (get-current-tab)  get-defs) is-modified?)) (change-to-file i)]
-                                                 [else (open-in-new-tab i)]))
-                                             )]
-                          [my-popup-menu *popup-menu]
-                          ))
-        (update-files!)
-        (unless is-show
-          (send area change-children
-                (λ (x)
-                  (filter
-                   (λ (x) (not (eq? real-area x))) x))))
-        (make-object vertical-panel% area))
-      ))
-  (drracket:get/extend:extend-unit-frame drracket-frame-mixin)
+(set! *files (new directory-list% 
+                  [parent real-area]
+                  [select-callback (lambda (i)
+                                     (when (file-exists? i)
+                                       (cond
+                                         [(find-matching-tab i) => change-to-tab]
+                                         [(not (send (send (get-current-tab)  get-defs) is-modified?)) (change-to-file i)]
+                                         [else (open-in-new-tab i)]))
+                                     )]
+                  [my-popup-menu *popup-menu]
+                  ))
+(update-files!)
+(unless is-show
+  (send area change-children
+        (λ (x)
+          (filter
+           (λ (x) (not (eq? real-area x))) x))))
+(make-object vertical-panel% area))
+))
+(drracket:get/extend:extend-unit-frame drracket-frame-mixin)
   
-  )
+)
