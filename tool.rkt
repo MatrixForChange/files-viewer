@@ -25,6 +25,7 @@
                                    main-dir
                                    #f))
         )
+      
       (define is-show (get-preference 'files-viewer:is-show))
       (define *popup-menu #f)
       (define *files #f)
@@ -33,16 +34,7 @@
         (when (and main-directory (directory-exists? main-directory))
           (send *files set-dir! main-directory)
           (send *files update-files!)))
-
-      
-      (inherit get-show-menu change-to-file change-to-tab create-new-tab
-               get-current-tab open-in-new-tab find-matching-tab)
-      (define/override (get-definitions/interactions-panel-parent)
-        (define area (new my-horizontal-dragable% [parent (super get-definitions/interactions-panel-parent)]
-                          ))
-        (define real-area (new vertical-panel% [parent area]
-                               ))
-        (define (change-to-directory dir)
+      (define (change-to-directory dir)
           (let/ec exit
             (when dir
               (with-handlers ([exn:fail?
@@ -55,6 +47,17 @@
               (put-preferences '(files-viewer:directory)
                                (list (~a dir)))
               (update-files!))))
+      (unless main-directory (change-to-directory (find-system-path 'home-dir)))
+
+      
+      (inherit get-show-menu change-to-file change-to-tab create-new-tab
+               get-current-tab open-in-new-tab find-matching-tab)
+      (define/override (get-definitions/interactions-panel-parent)
+        (define area (new my-horizontal-dragable% [parent (super get-definitions/interactions-panel-parent)]
+                          ))
+        (define real-area (new vertical-panel% [parent area]
+                               ))
+        
         (set! *show/hide-plugin (new menu-item%
                                      [label (if is-show "Hide the File Manager" "Show the File Manager")]
                                      [callback (lambda (c e) (define is-show
