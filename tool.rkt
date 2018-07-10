@@ -150,7 +150,7 @@
                                   (set! auto-refresh? v)
                                   (put-preferences '(files-viewer:auto-refresh) (list v))
                                   (if v
-                                      (update-fschange)
+                                      (update-files!)
                                       (send fschange change-dirs '())))]
                                ))
         
