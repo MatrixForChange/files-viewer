@@ -47,6 +47,9 @@
     (define/public (get-text)
       (define t (get-editor))
       (send t get-text))
+    (define/public (compound?)
+      #f
+      )
     ))
 
 (define compound-mixin
@@ -71,6 +74,9 @@
       (unless ran
         (task)
         (set! ran #t)))
+    (define/public (compound?)
+      #t
+      )
     ))
 
 
@@ -116,8 +122,10 @@
               )))))
 
     (define/override (on-double-select i)
-      (when i
-        (select-callback (send i user-data))
+      (cond
+        [(and i (send i compound?)) (send i toggle-open/closed)]
+        [i (select-callback (send i user-data))]
+        [else (void)]
         )
       (super on-double-select i)
       )
@@ -133,10 +141,10 @@
     (define/override (on-item-opened item)
       (send item run-task)
       (set-add! opened (send item user-data))
-      (super on-item-opened item))
+      )
     (define/override (on-item-closed item)
       (set-remove! opened (send item user-data))
-      (super on-item-closed item)) 
+      ) 
     ))
 
 

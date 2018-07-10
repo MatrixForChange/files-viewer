@@ -3,7 +3,8 @@
 (define authors '("jiangqi"))
 (define version "0.00.21")
 (define package-content-state '(built "6.12"))
-(define deps '("base" "gui-lib" "drracket" "rackunit-lib"))
+(define deps '("base" "gui-lib" "drracket" "rackunit-lib" "scheme-lib"
+                      "compatibility-lib"))
 (define drracket-tool-names (list "file-viewer"))
 (define drracket-tools (list (list "tool.rkt")))
 (define pkg-desc "file manager for racket")
