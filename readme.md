@@ -3,7 +3,7 @@ The project is under LGPL LICENSE (same as Racket).
 
 Issues and pull requests are welcomed.  
  
-Latest version : 0.00.23 
+Latest version : 0.00.24
 
 # Usage
 To edit a file , double click the item.
