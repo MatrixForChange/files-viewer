@@ -86,7 +86,7 @@
                 [my-popup-menu #f])
     (super-new)
     (inherit delete-item get-items popup-menu allow-deselect get-editor
-             suspend-flush resume-flush refresh)
+             suspend-flush resume-flush refresh get-selected)
     (define the-dir #f)
     (define opened (mutable-set))
     (allow-deselect #t)
@@ -134,21 +134,26 @@
               )))))
 
     (define/override (on-double-select i)
-      (cond
-        [(and i (send i compound?)) (send i toggle-open/closed)]
-        [i (select-callback (send i user-data))]
-        [else (void)]
-        )
-      (super on-double-select i)
+      (when i
+        (cond
+          [(send i compound?) (send i toggle-open/closed)]
+          [else (select-callback (send i user-data))]
+          )
+        (send i select #t))
       )
 
     
     
     (define/override (on-event ev)
+      (when (send ev button-down? 'left)
+        (define i (get-selected))
+        (when i (send i select #f))
+        )
       (super on-event ev)
       (when (send ev button-down? 'right)
         (popup-menu my-popup-menu (send ev get-x)
                     (send ev get-y)))
+      
       )
     (define/override (on-item-opened item)
       (send item run-task)
