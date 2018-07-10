@@ -15,23 +15,26 @@
   (export drracket:tool-exports^)
   (define phase1 void)
   (define phase2 void)
-  (define main-directory (let ()
-                           (define main-dir (get-preference 'files-viewer:directory))
-                           (if (and main-dir (directory-exists? main-dir))
-                               main-dir
-                               #f))
-    )
-  (define is-show (get-preference 'files-viewer:is-show))
-  (define *popup-menu #f)
-  (define *files #f)
-  (define *show/hide-plugin #f)
-  (define (update-files!)
-    (when (and main-directory (directory-exists? main-directory))
-      (send *files set-dir! main-directory)
-      (send *files update-files!)))
+  
   (define drracket-frame-mixin
     (mixin (drracket:unit:frame<%> (class->interface drracket:unit:frame%)) ()
-      (super-new)
+      
+      (define main-directory (let ()
+                               (define main-dir (get-preference 'files-viewer:directory))
+                               (if (and main-dir (directory-exists? main-dir))
+                                   main-dir
+                                   #f))
+        )
+      (define is-show (get-preference 'files-viewer:is-show))
+      (define *popup-menu #f)
+      (define *files #f)
+      (define *show/hide-plugin #f)
+      (define (update-files!)
+        (when (and main-directory (directory-exists? main-directory))
+          (send *files set-dir! main-directory)
+          (send *files update-files!)))
+
+      
       (inherit get-show-menu change-to-file change-to-tab create-new-tab
                get-current-tab open-in-new-tab find-matching-tab)
       (define/override (get-definitions/interactions-panel-parent)
@@ -122,28 +125,29 @@
                                          (unless (directory-exists?
                                                   (send item user-data)) (exit (message-box "error" "not a directory")))
                                          (change-to-directory (send item user-data))))]
-))
+                               ))
         
           
-(set! *files (new directory-list% 
-                  [parent real-area]
-                  [select-callback (lambda (i)
-                                     (when (file-exists? i)
-                                       (cond
-                                         [(find-matching-tab i) => change-to-tab]
-                                         [(not (send (send (get-current-tab)  get-defs) is-modified?)) (change-to-file i)]
-                                         [else (open-in-new-tab i)]))
-                                     )]
-                  [my-popup-menu *popup-menu]
-                  ))
-(update-files!)
-(unless is-show
-  (send area change-children
-        (λ (x)
-          (filter
-           (λ (x) (not (eq? real-area x))) x))))
-(make-object vertical-panel% area))
-))
-(drracket:get/extend:extend-unit-frame drracket-frame-mixin)
+        (set! *files (new directory-list% 
+                          [parent real-area]
+                          [select-callback (lambda (i)
+                                             (when (file-exists? i)
+                                               (cond
+                                                 [(find-matching-tab i) => change-to-tab]
+                                                 [(not (send (send (get-current-tab)  get-defs) is-modified?)) (change-to-file i)]
+                                                 [else (open-in-new-tab i)]))
+                                             )]
+                          [my-popup-menu *popup-menu]
+                          ))
+        (update-files!)
+        (unless is-show
+          (send area change-children
+                (λ (x)
+                  (filter
+                   (λ (x) (not (eq? real-area x))) x))))
+        (make-object vertical-panel% area))
+      (super-new)
+      ))
+  (drracket:get/extend:extend-unit-frame drracket-frame-mixin)
   
-)
+  )
