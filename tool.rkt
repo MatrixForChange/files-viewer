@@ -155,7 +155,7 @@
                                              (when (file-exists? i)
                                                (cond
                                                  [(find-matching-tab i) => change-to-tab]
-                                                 [(not (send (send (get-current-tab)  get-defs) is-modified?)) (change-to-file i)]
+                                                 [(safe-to-change-file? (send (get-current-tab)  get-defs)) (change-to-file i)]
                                                  [else (open-in-new-tab i)]))
                                              )]
                           [my-popup-menu *popup-menu]
@@ -168,7 +168,11 @@
                   (filter
                    (λ (x) (not (eq? real-area x))) x))))
         (make-object vertical-panel% area))
-      
+
+      (define/private (safe-to-change-file? ed)
+        (not (or (send ed is-modified?)
+                 (send ed can-do-edit-operation? 'undo #t)
+                 (send ed can-do-edit-operation? 'redo #t))))
 
       (define/augment (on-close)
         (send fschange shutdown))
