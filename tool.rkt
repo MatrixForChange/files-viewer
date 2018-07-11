@@ -14,14 +14,13 @@
   (define drracket-frame-mixin
     (mixin (drracket:unit:frame<%> (class->interface drracket:unit:frame%)) ()
       
-      (define main-directory (let ()
-                               (define main-dir (get-preference 'files-viewer:directory))
+      (define main-directory (let ([main-dir (get-preference 'files-viewer:directory)])
                                (if (and main-dir (directory-exists? main-dir))
                                    main-dir
-                                   #f))
-        )
-
+                                   #f)))
+      (define is-show (get-preference 'files-viewer:is-show))
       (define auto-refresh? (get-preference 'files-viewer:auto-refresh))
+      
       (define fschange (new fschange%))
       (define fschange-timer
         (new timer%
@@ -30,7 +29,7 @@
                       (update-files!)))]
              [interval 1000]))
       
-      (define is-show (get-preference 'files-viewer:is-show))
+      
       (define *popup-menu #f)
       (define *files #f)
       (define *show/hide-plugin #f)
@@ -39,6 +38,7 @@
           (send *files set-dir! main-directory)
           (send *files update-files!)
           (update-fschange)))
+      
       (define (change-to-directory dir)
         (let/ec exit
           (when dir
