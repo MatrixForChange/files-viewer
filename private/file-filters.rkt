@@ -15,8 +15,8 @@
                       [parent panel]
                       [selection (if (get-preference 'files-viewer:filter-types2)
                                      1 0)]))
-                      
-  (define types (new text-field% [label "Files Types(such as \".bak .zo\"):"]
+  (new message% [label "Files Types(such as \".bak .zo\"):"][parent panel])                    
+  (define types (new text-field% [label ""]
                      [parent panel][init-value (if default (string-join default " ")
                                                "")]))
   (define ok (new button% [label "OK"][parent panel2]
