@@ -83,7 +83,9 @@
 (define directory-list%
   (class hierarchical-list%
     (init-field [select-callback void]
-                [my-popup-menu #f])
+                [my-popup-menu #f]
+                [opened-change-callback void] ;change by manually click
+                )
     (super-new)
     (inherit delete-item get-items popup-menu allow-deselect get-editor
              suspend-flush resume-flush refresh get-selected)
@@ -158,10 +160,27 @@
     (define/override (on-item-opened item)
       (send item run-task)
       (set-add! opened (send item user-data))
+      (opened-change-callback)
+      (void)
       )
     (define/override (on-item-closed item)
       (set-remove! opened (send item user-data))
-      ) 
+      (opened-change-callback)
+      (void)
+      )
+
+    (define/public (get-opened-inside)
+      (cond
+        [(not the-dir) (mutable-set)]
+        [else
+         (define opened-inside (mutable-set the-dir))
+         (define (recur item)
+           (when (and (is-a? item hierarchical-list-compound-item<%>)
+                      (send item is-open?))
+             (set-add! opened-inside (send item user-data))
+             (for-each recur (send item get-items))))
+         (for-each recur (get-items))
+         (set->list opened-inside)]))
     ))
 
 
