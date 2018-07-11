@@ -1,12 +1,7 @@
 #lang racket
 (require racket/gui drracket/tool
          framework
-         "private/path-helpers.rkt"
-         "private/gui-helpers.rkt"
-         "private/popup-menu.rkt"
-         "private/file-filters.rkt"
-         "private/rename-dialog.rkt"
-         "private/fschange.rkt"
+         "private/main.rkt"
          )
 (provide tool@)
 
@@ -14,8 +9,7 @@
 (define-unit tool@
   (import drracket:tool^)
   (export drracket:tool-exports^)
-  (define phase1 void)
-  (define phase2 void)
+  (match-define (and phase1 phase2) void)
   
   (define drracket-frame-mixin
     (mixin (drracket:unit:frame<%> (class->interface drracket:unit:frame%)) ()
