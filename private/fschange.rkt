@@ -69,8 +69,3 @@
     
     (super-new)))
 
-(module+ test
-  (define fs (new fschange% [callback (λ () (displayln "changed"))]))
-  (define dir (current-directory))
-  (send fs change-dirs
-        (list dir (build-path dir 'up) (build-path dir 'up 'up))))
