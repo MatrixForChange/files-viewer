@@ -146,6 +146,10 @@
                                   (if v
                                       (update-files!)
                                       (send fschange change-dirs '())))]
+                               [change-to-the-directory-of-current-file-callback
+                                (thunk 
+                                 (define d (send (send this get-current-tab) get-directory))
+                                 (change-to-directory d))]
                                ))
         
           

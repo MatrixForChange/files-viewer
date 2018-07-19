@@ -12,6 +12,8 @@
                                [callback (λ (c e) (callback-name))]))))
     (define-menu-item change-the-directory "Change the Directory")
     (define-menu-item change-to-this-directory "Change to this Directory")
+    (define-menu-item change-to-the-directory-of-current-file
+      "Change to the directory of current file")
     (define-menu-item parent-directory "Up")
     (define-menu-item refresh "Refresh")
     (new separator-menu-item% [parent this])
