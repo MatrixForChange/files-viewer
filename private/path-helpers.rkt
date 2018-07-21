@@ -74,9 +74,11 @@
   (define other (new button% [label "Other Files(with Suffix)"]
                      [parent d][stretchable-width #t]
                      [callback (λ (c e)
+                                 (if (string=? (send name get-value) "")
+                                     (message-box "error" "file name is empty,can't create file")
                                   (create-new-file current-path
                                                    (send name get-value)
-                                                   "")
+                                                   ""))
                                   (send d show #f)
                                   )]))
   (send d show #t)
