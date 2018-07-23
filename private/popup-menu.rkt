@@ -14,7 +14,6 @@
     (define-menu-item change-to-this-directory "Change to this Directory")
     (define-menu-item change-to-the-directory-of-current-file
       "Change to the Directory of Current file")
-    (define-menu-item parent-directory "Up")
     (define-menu-item refresh "Refresh")
     (new separator-menu-item% [parent this])
     (define-menu-item new-file "New")

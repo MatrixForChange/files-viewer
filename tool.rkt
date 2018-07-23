@@ -2,6 +2,7 @@
 (require racket/gui drracket/tool
          framework
          "private/main.rkt"
+         "private/dir-control.rkt"
          )
 (provide tool@)
 
@@ -17,7 +18,7 @@
       (define main-directory (let ([main-dir (get-preference 'files-viewer:directory)])
                                (if (and main-dir (directory-exists? main-dir))
                                    main-dir
-                                   #f)))
+                                   (find-system-path 'home-dir))))
       (define is-show (get-preference 'files-viewer:is-show))
       (define auto-refresh? (get-preference 'files-viewer:auto-refresh))
       
@@ -33,6 +34,7 @@
       (define *popup-menu #f)
       (define *files #f)
       (define *show/hide-plugin #f)
+      (define *dir-control #f)
       (define (update-files!)
         (when (and main-directory (directory-exists? main-directory))
           (send *files set-dir! main-directory)
@@ -51,8 +53,8 @@
             (set! main-directory dir)
             (put-preferences '(files-viewer:directory)
                              (list (~a dir)))
+            (send *dir-control set-path (path-alist dir))
             (update-files!))))
-      (unless main-directory (change-to-directory (find-system-path 'home-dir)))
 
       
       (inherit get-show-menu change-to-file change-to-tab create-new-tab
@@ -87,6 +89,13 @@
                                                  )]
                                      [parent (get-show-menu)]
                                      ))
+        (set! *dir-control (new dir-control%
+                                [parent real-area]
+                                [callback (λ (c e)
+                                            (change-to-directory (cdr (list-ref (send c get-path-elements)
+                                                      (get-field path-index e))))
+                                            (send *dir-control set-path (path-alist main-directory)))]))
+        (send *dir-control set-path (path-alist main-directory))
         (set! *popup-menu (new files-popup-menu%
                                [change-the-directory-callback
                                 (thunk
@@ -127,10 +136,6 @@
                                 (thunk (define cmd-config
                                          (new cmd-dialog% [parent this]))
                                        (send cmd-config show #t))]
-                               [parent-directory-callback
-                                (thunk (when main-directory
-                                         (change-to-directory
-                                          (simplify-path (build-path main-directory 'up)))))]
                                [change-to-this-directory-callback
                                 (thunk (let/ec exit
                                          (define item (send *files get-selected))

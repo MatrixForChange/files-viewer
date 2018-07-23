@@ -1,7 +1,7 @@
 #lang info
 (define collection "files-viewer")
 (define authors '("jiangqi"))
-(define version "0.00.27")
+(define version "0.00.28")
 (define package-content-state '(built "6.12"))
 (define deps '("base" "gui-lib" "drracket" "rackunit-lib" "scheme-lib"
                       "compatibility-lib" "scribble-lib"))
