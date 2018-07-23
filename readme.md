@@ -12,6 +12,6 @@ To call the popup menu , right click the file manager.
 
 To show or hide the file manager , View -> Show/Hide the File Manager. 
 
-![image](https://user-images.githubusercontent.com/22510026/42548949-4830b8c2-84fc-11e8-9d16-8e67fe4e194d.png)
+![image](https://user-images.githubusercontent.com/22510026/43056179-45903640-8e6d-11e8-9efe-dfeed36fbb84.png)
 
 
