@@ -17,18 +17,18 @@
 
 (define (delete-file-and-directory dparent path)
   (match (message-box "File Manager"
-               (format "Are you sure to delete ~a" path)
-               dparent '(ok-cancel))
+                      (format "Are you sure to delete ~a" path)
+                      dparent '(ok-cancel))
     ['ok (delete-file-and-directory/recur path)]
     ['cancel (void)]))
 
 (define (delete-file-and-directory/recur path)
   (if (file-exists? path) (delete-file path)
       (begin
-      (for ([i (in-directory path)])
-        (delete-file-and-directory/recur i))
-      (delete-directory path))
-        ))
+        (for ([i (in-directory path)])
+          (delete-file-and-directory/recur i))
+        (delete-directory path))
+      ))
 
 (define (create-new-file path name content)
   (define new-name (if (file-exists? path)
@@ -50,22 +50,23 @@
   (define-simple-macro (define-file-kind kind-name desc:str suffix:str)
     #:with content-name (format-id #'here "~a-content" #'kind-name)
     (define kind-name (new button% [label desc]
-                      [parent d] [stretchable-width #t]
-                      [callback (λ (c e)
-                                  (create-new-file current-path
-                                                   (string-append (send name get-value) suffix)
-                                                   content-name)
-                                  (send d show #f)
-                                  )])))
+                           [parent d] [stretchable-width #t]
+                           [callback (λ (c e)
+                                       (create-new-file current-path
+                                                        (string-append (send name get-value) suffix)
+                                                        content-name)
+                                       (send d show #f)
+                                       )])))
 
   (define dir (new button% [label "Directory"]
-                     [parent d][stretchable-width #t]
-                     [callback (λ (c e)
-                                 (with-handlers
-                                     ([exn:fail:filesystem? (λ (e)
-                                                              (message-box "error" "fail to create directory here"))])
-                                      (make-directory (build-path current-path (send name get-value))))
-                                 (send d show #f))]))
+                   [parent d][stretchable-width #t]
+                   [callback (λ (c e)
+                               (with-handlers
+                                   ([exn:fail? (λ (e)
+                                                 (message-box "error"
+                                                              "fail to create directory here,or your directory name is empty"))])
+                                 (make-directory (build-path current-path (send name get-value))))
+                               (send d show #f))]))
   
   (define-file-kind rkt-file "Racket Programs (*.rkt)" ".rkt")
   (define-file-kind rkt-gui-file "Racket GUI Programs (*.rkt)" ".rkt")
@@ -76,11 +77,11 @@
                      [callback (λ (c e)
                                  (if (string=? (send name get-value) "")
                                      (message-box "error" "file name is empty,can't create file")
-                                  (create-new-file current-path
-                                                   (send name get-value)
-                                                   ""))
-                                  (send d show #f)
-                                  )]))
+                                     (create-new-file current-path
+                                                      (send name get-value)
+                                                      ""))
+                                 (send d show #f)
+                                 )]))
   (send d show #t)
   )
        

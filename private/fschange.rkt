@@ -31,7 +31,10 @@
                      ([d (in-set new-dirs)])
              (cond
                [(hash-ref h d (λ () #f)) h]
-               [(filesystem-change-evt d (λ () #f))
+               [(with-handlers ([exn:fail:filesystem?
+                                 (λ (e)
+                                   #f)])
+                  (filesystem-change-evt d (λ () #f)))
                 =>
                 (λ (evt) (hash-set h d evt))]
                [else h])))
