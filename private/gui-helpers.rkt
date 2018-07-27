@@ -129,9 +129,10 @@
              dir)))
         (for ([i files])
           (define is-directory (directory-exists? (build-path dir i)))
-          (when (or is-directory
+          (when (and (or is-directory
                     (not (xor (get-preference 'files-viewer:filter-types2)
                               (ormap (λ (x) (path-has-extension? i x)) filter-types))))
+                     (not (and (get-preference 'files-viewer:filter-types3) (string-prefix? (path->string i) "."))))
             (define item (if is-directory
                              (send parent new-list compound-mixin)
                              (send parent new-item simple-mixin)))
