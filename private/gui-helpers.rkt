@@ -92,7 +92,12 @@
     (define the-dir #f)
     (define opened (mutable-set))
     (allow-deselect #t)
-    
+    (define (sort!)
+      (send this sort (lambda (x y)
+                        (define p1 (directory-exists? (send x user-data)))
+                        (define p2 (directory-exists? (send y user-data)))
+                        (cond [(xor p1 p2) p1]
+                          [else (string<? (send x get-text) (send y get-text))]))))
     (define/public (update-files!)
       (define e (get-editor))
       (define ad (send e get-admin))
@@ -105,6 +110,7 @@
       (when (and the-dir (directory-exists? the-dir))
         (update-directory! this the-dir (if filter-types filter-types '())))
       (send e end-edit-sequence)
+      (sort!)
       (send ad scroll-to (unbox x) (unbox y) (unbox w) (unbox h) #f)
       (resume-flush)
       (refresh))
@@ -125,7 +131,7 @@
           (define is-directory (directory-exists? (build-path dir i)))
           (when (or is-directory
                     (not (xor (get-preference 'files-viewer:filter-types2)
-                       (ormap (λ (x) (path-has-extension? i x)) filter-types))))
+                              (ormap (λ (x) (path-has-extension? i x)) filter-types))))
             (define item (if is-directory
                              (send parent new-list compound-mixin)
                              (send parent new-item simple-mixin)))
@@ -163,11 +169,13 @@
       (send item run-task)
       (set-add! opened (send item user-data))
       (opened-change-callback)
+      (sort!)
       (void)
       )
     (define/override (on-item-closed item)
       (set-remove! opened (send item user-data))
       (opened-change-callback)
+      (sort!)
       (void)
       )
 

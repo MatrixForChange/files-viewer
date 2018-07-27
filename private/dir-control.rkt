@@ -28,7 +28,9 @@
 
 (define dir-control%
   (class canvas%
-    (inherit refresh get-dc popup-menu set-canvas-background)
+    (inherit refresh get-dc popup-menu set-canvas-background
+              init-auto-scrollbars)
+    
     (init [callback (λ (ce e)
                       (println (list-ref (send ce get-path-elements)
                                          (get-field path-index e)))
@@ -64,7 +66,8 @@
       (send dc set-brush "silver" 'solid)
       (send dc set-pen "black" 1 'solid)
 
-      (for/fold ([xoffset 0])
+      (for/fold ([xoffset 0]
+                  )
                 ([(pe i) (in-indexed path-elements)])
         (define label (car pe))
         (define (draw-background-segment
@@ -95,10 +98,10 @@
       (send dc set-brush old-brush)
       (send dc set-pen old-pen))
     
-    (super-new [style '()][stretchable-height #f][min-height 30])
+    (super-new [style '(hscroll)][stretchable-height #f][min-height 45])
     
     (set-canvas-background (make-object color% "WhiteSmoke"))
-
+    (init-auto-scrollbars 100 #f 0.0 0.0)
     (define (select-action mouse-xpos)
       (callback this (new dir-control-event% [path-index path-index])))
     
