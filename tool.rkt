@@ -2,7 +2,6 @@
 (require racket/gui drracket/tool
          framework
          "private/main.rkt"
-         "private/dir-control.rkt"
          )
 (provide tool@)
 

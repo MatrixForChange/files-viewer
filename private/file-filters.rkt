@@ -36,5 +36,5 @@
   (define cancel (new button% [label "Cancel"] [parent panel2]
                       [callback (λ (c e)
                                   (send d show #f))]))
-  
+  (send ok focus)
   (send d show #t))

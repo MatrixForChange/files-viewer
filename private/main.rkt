@@ -4,10 +4,12 @@
          "popup-menu.rkt"
          "file-filters.rkt"
          "rename-dialog.rkt"
-         "fschange.rkt")
+         "fschange.rkt"
+         "dir-control.rkt")
 (provide (all-from-out "path-helpers.rkt"
          "gui-helpers.rkt"
          "popup-menu.rkt"
          "file-filters.rkt"
          "rename-dialog.rkt"
-         "fschange.rkt"))
+         "fschange.rkt"
+         "dir-control.rkt"))

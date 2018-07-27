@@ -8,10 +8,14 @@
     (define f (new text-field% [label "New Name:"] [parent this]))
     (define ok (new button% [label "OK"][parent this]
                     [callback (λ (c e)
+                                (with-handlers
+                                    ([exn:fail? (λ (e)
+                                                  (message-box "error" "file name invalid."))])
                                 (rename-file-or-directory path
-                                                          (simplify-path (build-path path 'up (send f get-value))))
+                                                          (simplify-path (build-path path 'up (send f get-value)))))
                                 (send this show #f))])
-                                )))
+                                )
+    (send ok focus)))
 (define cmd-dialog%
   (class dialog%
     (super-new [label "Set the Command for Terminal Launcher"][width 500][height 160])
@@ -25,5 +29,7 @@
                     [callback (λ (c e)
                                 (put-preferences '(files-viewer:cmd) (list (send f get-value)))
                                 (send this show #f))])
-                                )))
+                                )
+    (send ok focus)
+    ))
     
