@@ -2,11 +2,13 @@
 (require racket/gui)
 (provide filter-dialog)
 (define (filter-dialog dparent)
-  (define d (new dialog% [width 600][label "File Filter"][parent dparent]))
+  (define filter-dialog%
+    (class dialog%
+      (super-new)
   (define default (get-preference 'files-viewer:filter-types))
-  (define panel (new vertical-panel% [parent d]
+  (define panel (new vertical-panel% [parent this]
                      [alignment '(left top)]))
-  (define panel2 (new horizontal-panel% [parent d]
+  (define panel2 (new horizontal-panel% [parent this]
                       [alignment '(right bottom)]))
   (new message% [label "I want to ..."][parent panel])
   (define hide.files (new check-box% 
@@ -32,9 +34,15 @@
                                                      (= 1 (send choice get-selection))
                                                      (send hide.files get-value)
                                                      ))
-                              (send d show #f))]))
+                              (send this show #f))]))
   (define cancel (new button% [label "Cancel"] [parent panel2]
                       [callback (λ (c e)
-                                  (send d show #f))]))
-  (send ok focus)
+                                  (send this show #f))]))
+  (define/override (on-subwindow-char recv ev)
+      (when (equal? (send ev get-key-code) #\return)
+        (send ok command (make-object control-event% 'button (current-milliseconds))))
+      (super on-subwindow-char recv ev))
+  
+  ))
+  (define d (new filter-dialog% [width 600][label "File Filter"][parent dparent]))
   (send d show #t))

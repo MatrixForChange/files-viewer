@@ -15,7 +15,11 @@
                                                           (simplify-path (build-path path 'up (send f get-value)))))
                                 (send this show #f))])
                                 )
-    (send ok focus)))
+    (define/override (on-subwindow-char recv ev)
+      (when (equal? (send ev get-key-code) #\return)
+        (send ok command (make-object control-event% 'button (current-milliseconds))))
+      (super on-subwindow-char recv ev))
+    ))
 (define cmd-dialog%
   (class dialog%
     (super-new [label "Set the Command for Terminal Launcher"][width 500][height 160])
@@ -30,6 +34,9 @@
                                 (put-preferences '(files-viewer:cmd) (list (send f get-value)))
                                 (send this show #f))])
                                 )
-    (send ok focus)
+    (define/override (on-subwindow-char recv ev)
+      (when (equal? (send ev get-key-code) #\return)
+        (send ok command (make-object control-event% 'button (current-milliseconds))))
+      (super on-subwindow-char recv ev))
     ))
     
