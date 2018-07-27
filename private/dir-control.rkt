@@ -29,13 +29,14 @@
 (define dir-control%
   (class canvas%
     (inherit refresh get-dc popup-menu set-canvas-background
-              init-auto-scrollbars)
+              init-auto-scrollbars get-view-start)
     
     (init [callback (λ (ce e)
                       (println (list-ref (send ce get-path-elements)
                                          (get-field path-index e)))
                       (flush-output))])
     (field [highlighted "orange"])
+    (define need-resize? #t)
     (define path-elements '()) ; alist ordered list of ordered pairs
     (define path-index #f)
     (define mouse-pos  (new mouse-event% [event-type 'motion]))
@@ -44,6 +45,7 @@
     (define/public-final (get-path-elements) path-elements)
     (define/public-final (set-path _path)
       (set! path-elements _path)
+      (set! need-resize? #t)
       (refresh))
     
 
@@ -67,6 +69,11 @@
       (send dc set-pen "black" 1 'solid)
 
       (for/fold ([xoffset 0]
+                 #:result (when need-resize?
+                            (init-auto-scrollbars
+                             (inexact->exact (+ gap xoffset))
+                             1 0.0 0.0)
+                            (set! need-resize? #f))
                   )
                 ([(pe i) (in-indexed path-elements)])
         (define label (car pe))
@@ -101,16 +108,19 @@
     (super-new [style '(hscroll)][stretchable-height #f][min-height 45])
     
     (set-canvas-background (make-object color% "WhiteSmoke"))
-    (init-auto-scrollbars 100 #f 0.0 0.0)
     (define (select-action mouse-xpos)
       (callback this (new dir-control-event% [path-index path-index])))
     
     (define/override (on-event me)
       (send me set-y (- (send me get-y) 5))
+      (define-values (a b) (get-view-start))
+      (send me set-x (+ a (send me get-x)))
       (case (send me get-event-type)
         [(motion) (highlight-if-hover me)
                   (refresh)]
-        [(left-down) (select-action (send mouse-pos get-x))])
+        [(left-down) (select-action (send mouse-pos get-x))
+                     (set! need-resize? #t)
+                     (refresh)])
       (super on-event me))
 
     (send (get-dc) set-font normal-control-font)))
