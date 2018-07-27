@@ -435,9 +435,7 @@
                              (when (and (is-a? (send s get-item) hierarchical-list-item<%>)
                                         (send (send s get-item) is-selected?))
                                (set! to-scroll-to s)))
-                           (unless (or no-sublists?
-				       (is-a? s hierarchical-list-snip%))
-                             (insert (make-whitespace)))
+                           
                            (insert s)
                            (insert #\newline))
                          l)
