@@ -129,7 +129,7 @@
                                        (define path (if (file-exists? p) (simplify-path
                                                                           (build-path p 'up))
                                                         p))
-                                       (if cmd (process/safe (format cmd path))
+                                       (if cmd (process/safe (string-replace cmd "~a" path))
                                            (message-box "error" "Command to Open Terminal Undefined")))]
                                [terminal-config-callback
                                 (thunk (define cmd-config
