@@ -96,6 +96,7 @@
                                             (send *dir-control set-path (path-alist main-directory)))]))
         (send *dir-control set-path (path-alist main-directory))
         (set! *popup-menu (new files-popup-menu%
+                               [switch change-to-directory]
                                [change-the-directory-callback
                                 (thunk
                                  (change-to-directory (get-directory))
