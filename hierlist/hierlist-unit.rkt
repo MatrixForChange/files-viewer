@@ -26,10 +26,10 @@
 
       (define transparent (make-object brush% "WHITE" 'transparent))
       (define transparent-pen (make-object pen% "WHITE" 1 'transparent))
-      (define black-xor-pen (make-object pen% (get-highlight-background-color) 1 'solid))
+      (define black-xor-pen (make-object pen% "darkgray" 1 'solid))
       (define red (make-object brush% "RED" 'solid))
       (define blue (make-object brush% "BLUE" 'solid))
-      (define black-xor (make-object brush% (get-highlight-background-color) 'solid))
+      (define black-xor (make-object brush% "darkgray" 'solid))
       (define arrow-cursor (make-object cursor% 'arrow))
 
       (define-values (up-bitmap down-bitmap up-click-bitmap down-click-bitmap)
