@@ -10,7 +10,7 @@
                     [callback (λ (c e)
                                 (with-handlers
                                     ([exn:fail? (λ (e)
-                                                  (message-box "error" "file name invalid."))])
+                                                  (message-box "Error" "Invalid file name."))])
                                   (rename-file-or-directory path
                                                             (simplify-path (build-path path 'up (send f get-value)))))
                                 (send this show #f))])

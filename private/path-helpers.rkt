@@ -35,7 +35,7 @@
                        (simplify-path (build-path path 'up name))
                        (build-path path name)))
   (if (file-exists? new-name)
-      (message-box "error" "File exists,can't create!")
+      (message-box "Error" "File exists,can't create!")
       (let ([p (open-output-file new-name)])
         (display content p)
         (close-output-port p))))
@@ -64,8 +64,8 @@
                    [callback (λ (c e)
                                (with-handlers
                                    ([exn:fail? (λ (e)
-                                                 (message-box "error"
-                                                              "fail to create directory here,or your directory name is empty"))])
+                                                 (message-box "Error"
+                                                              "Fail to create directory here,or your directory name is empty."))])
                                  (make-directory (build-path current-path (send name get-value))))
                                (send d show #f))]))
   
@@ -77,7 +77,7 @@
                      [parent d][stretchable-width #t]
                      [callback (λ (c e)
                                  (if (string=? (send name get-value) "")
-                                     (message-box "error" "file name is empty,can't create file")
+                                     (message-box "Error" "File name is empty,can't create file.")
                                      (create-new-file current-path
                                                       (send name get-value)
                                                       ""))

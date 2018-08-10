@@ -138,7 +138,7 @@
           (with-handlers ([exn:fail?
                            (λ (e)
                              (exit
-                              (message-box "error" "can't open the directory")))])
+                              (message-box "Error" "Can't open the directory.")))])
             (directory-list
              dir)))
         (for ([i files])

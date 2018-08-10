@@ -46,7 +46,7 @@
             (with-handlers ([exn:fail?
                              (λ (e)
                                (exit
-                                (message-box "error" "can't open the directory")))])
+                                (message-box "Error" "Can't open the directory")))])
               (directory-list
                dir))
             (set! main-directory dir)
@@ -112,7 +112,7 @@
                                                                        (delete-file-and-directory this
                                                                                                   (send item user-data))
                                                                        (update-files!))
-                                                                (message-box "error" "nothing to delete.")))]
+                                                                (message-box "Error" "Nothing to delete.")))]
                                [file-filter-callback (thunk (filter-dialog this)
                                                             (update-files!))]
                                [rename-file-callback (thunk (define item (send *files get-selected))
@@ -132,7 +132,7 @@
                                                                           (build-path p 'up))
                                                         p))
                                        (if cmd (process/safe (string-replace cmd "~a" (~a path)))
-                                           (message-box "error" "Command to Open Terminal Undefined")))]
+                                           (message-box "Error" "Command to open terminal is undefined.")))]
                                [terminal-config-callback
                                 (thunk (define cmd-config
                                          (new cmd-dialog% [parent this]))
@@ -140,9 +140,9 @@
                                [change-to-this-directory-callback
                                 (thunk (let/ec exit
                                          (define item (send *files get-selected))
-                                         (unless item (exit (message-box "error" "nothing is selected")))
+                                         (unless item (exit (message-box "Error" "Nothing is selected.")))
                                          (unless (directory-exists?
-                                                  (send item user-data)) (exit (message-box "error" "not a directory")))
+                                                  (send item user-data)) (exit (message-box "Error" "Not a directory.")))
                                          (change-to-directory (send item user-data))))]
                                [auto-refresh-status auto-refresh?]
                                [auto-refresh-callback
