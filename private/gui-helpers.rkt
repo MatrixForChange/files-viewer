@@ -42,14 +42,13 @@
     ((interface () set-text get-text))
     (inherit get-editor)
     (super-new)
-    
-
     (define/public (set-text str)
       (define t (get-editor))
       (send t erase)
       (send t insert (file-icon-snip str))
       (send t insert " ")
-      (send t insert str))
+      (send t insert str)
+      (send t change-style (make-object style-delta% 'change-alignment 'top) 0 (send t last-position)))
     (define/public (get-text)
       (define t (get-editor))
       (send t get-text))
