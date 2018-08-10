@@ -1,5 +1,5 @@
 #lang racket
-(require "../hierlist/hierlist.rkt" racket/gui framework mrlib/include-bitmap file/glob)
+(require "../hierlist/hierlist.rkt" racket/gui framework racket/runtime-path file/glob pict)
 (provide directory-list% my-horizontal-dragable%)
 
 (define my-horizontal-dragable%
@@ -19,8 +19,14 @@
     (super-new)))
 
 ;;; generated using https://gist.github.com/yjqww6/a102dffb7e2ad00685a60da5e7469f88
-(define racket-icon (include-bitmap "doc.png" 'png/mask))
-(define normal-icon (include-bitmap "normal.png" 'png/mask))
+(define-runtime-path racket-icon-path "doc.png")
+(define-runtime-path normal-icon-path "normal.png")
+(define (fit path)
+  (pict->bitmap
+   (scale-to-fit (bitmap (make-object bitmap% path 'png/alpha #f #f 2)) 16 16)
+   #:make-bitmap (λ (w h) (make-bitmap w h #t #:backing-scale 2))))
+(define racket-icon (fit racket-icon-path))
+(define normal-icon (fit normal-icon-path))
 (define file-icon-snip
   (let ([g '("*.rkt" "*.scrbl" "*.rktl" "*.rktd" "*.ss" "*.scm")])
     (λ (str)
@@ -97,7 +103,7 @@
                         (define p1 (directory-exists? (send x user-data)))
                         (define p2 (directory-exists? (send y user-data)))
                         (cond [(xor p1 p2) p1]
-                          [else (string<? (send x get-text) (send y get-text))]))))
+                              [else (string<? (send x get-text) (send y get-text))]))))
     (define/public (update-files!)
       (define e (get-editor))
       (define ad (send e get-admin))
@@ -130,8 +136,8 @@
         (for ([i files])
           (define is-directory (directory-exists? (build-path dir i)))
           (when (and (or is-directory
-                    (not (xor (get-preference 'files-viewer:filter-types2)
-                              (ormap (λ (x) (path-has-extension? i x)) filter-types))))
+                         (not (xor (get-preference 'files-viewer:filter-types2)
+                                   (ormap (λ (x) (path-has-extension? i x)) filter-types))))
                      (not (and (get-preference 'files-viewer:filter-types3) (string-prefix? (path->string i) "."))))
             (define item (if is-directory
                              (send parent new-list compound-mixin)
