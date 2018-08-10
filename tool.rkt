@@ -90,6 +90,7 @@
                                      ))
         (set! *dir-control (new dir-control%
                                 [parent real-area]
+                                [highlighted "lightskyblue"]
                                 [callback (λ (c e)
                                             (change-to-directory (cdr (list-ref (send c get-path-elements)
                                                       (get-field path-index e))))

@@ -35,7 +35,7 @@
                       (println (list-ref (send ce get-path-elements)
                                          (get-field path-index e)))
                       (flush-output))])
-    (field [highlighted "orange"])
+    (init-field [highlighted "orange"])
     (define need-resize? #t)
     (define path-elements '()) ; alist ordered list of ordered pairs
     (define path-index #f)

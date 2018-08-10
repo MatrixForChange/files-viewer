@@ -19,14 +19,17 @@
     (super-new)))
 
 ;;; generated using https://gist.github.com/yjqww6/a102dffb7e2ad00685a60da5e7469f88
-(define-runtime-path racket-icon-path "doc.png")
-(define-runtime-path normal-icon-path "normal.png")
+(define-runtime-path racket-icon-path "icons/doc.png")
+(define-runtime-path normal-icon-path "icons/normal.png")
+(define-runtime-path directory-icon-path "icons/file-solid.png")
+
 (define (fit path)
   (pict->bitmap
    (scale-to-fit (bitmap (make-object bitmap% path 'png/alpha #f #f 2)) 16 16)
    #:make-bitmap (λ (w h) (make-bitmap w h #t #:backing-scale 2))))
 (define racket-icon (fit racket-icon-path))
 (define normal-icon (fit normal-icon-path))
+(define directory-icon (fit directory-icon-path))
 (define file-icon-snip
   (let ([g '("*.rkt" "*.scrbl" "*.rktl" "*.rktd" "*.ss" "*.scm")])
     (λ (str)
@@ -35,6 +38,10 @@
       (define s (make-object image-snip%))
       (send s set-bitmap (if (is-racket? str) racket-icon normal-icon))
       s)))
+(define (directory-icon-snip)
+  (define s (make-object image-snip%))
+  (send s set-bitmap directory-icon)
+  s)
 
 
 (define simple-mixin
@@ -67,8 +74,10 @@
     (define/public (set-text str)
       (define t (get-editor))
       (send t erase)
+      (send t insert (directory-icon-snip))
       (send t insert " ")
-      (send t insert str))
+      (send t insert str)
+      (send t change-style (make-object style-delta% 'change-alignment 'top) 0 (send t last-position)))
     (define/public (get-text)
       (define t (get-editor))
       (send t get-text))
