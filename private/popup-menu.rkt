@@ -112,9 +112,20 @@
 
 (define new-workspace%
   (class dialog%
-    (super-new [label "Add New Workspace"][width 450][height 180])
-    (define name-text (new text-field% [parent this][label "Name:"]))
-    (define path-text (new text-field% [parent this][label "Path:"]))
+    (super-new [label "Add New Workspace"][width 475][height 180])
+    
+    (define p1 (new horizontal-panel% [parent this]))
+    (new message% [parent p1][label "Name :"][stretchable-width #f]
+         [min-width 45])
+    (define name-text (new text-field% [parent p1][label ""]
+                           ))
+
+    (define p2 (new horizontal-panel% [parent this]))
+    (new message% [parent p2][label "Path :"][stretchable-width #f]
+         [min-width 45])
+    (define path-text (new text-field% [parent p2][label ""]
+                           ))
+    
     (define bp (new horizontal-panel% [parent this][alignment '(right bottom)]
                     [stretchable-height #f]))
 
@@ -129,7 +140,7 @@
                                        (set! prefs (if prefs prefs '()))
                                        (put-preferences '(files-viewer:workspaces)
                                                         (list (append prefs (list (list (send name-text get-value)
-                                                                                  (send path-text get-value))))))
+                                                                                        (send path-text get-value))))))
                                        (send this show #f))]))
     (define/override (on-subwindow-char recv ev)
       (when (equal? (send ev get-key-code) #\return)
