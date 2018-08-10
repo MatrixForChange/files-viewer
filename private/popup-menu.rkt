@@ -146,6 +146,7 @@
       (when (equal? (send ev get-key-code) #\return)
         (send ok-button command (make-object control-event% 'button (current-milliseconds))))
       (super on-subwindow-char recv ev))
+    (send name-text focus)
     ))
     
                                               

@@ -47,6 +47,7 @@
                  [parent dparent]))
   (define name (new text-field% [label "File Name(without Suffix):"]
                     [parent d]))
+  (send name focus)
   (define-simple-macro (define-file-kind kind-name desc:str suffix:str)
     #:with content-name (format-id #'here "~a-content" #'kind-name)
     (define kind-name (new button% [label desc]
