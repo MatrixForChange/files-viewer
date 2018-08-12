@@ -25,6 +25,9 @@
       (define types (new text-field% [label ""]
                          [parent panel][init-value (if default (string-join default " ")
                                                        "")]))
+      (define cancel (new button% [label "Cancel"] [parent panel2]
+                          [callback (λ (c e)
+                                      (send this show #f))]))
       (define ok (new button% [label "OK"][parent panel2]
                       [callback (λ (c e)
                                   (put-preferences '(files-viewer:filter-types
@@ -35,9 +38,7 @@
                                                          (send hide.files get-value)
                                                          ))
                                   (send this show #f))]))
-      (define cancel (new button% [label "Cancel"] [parent panel2]
-                          [callback (λ (c e)
-                                      (send this show #f))]))
+      
       (send types focus)
       (define/override (on-subwindow-char recv ev)
         (when (equal? (send ev get-key-code) #\return)
