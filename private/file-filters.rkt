@@ -13,10 +13,10 @@
       (new message% [label "I want to ..."][parent panel])
       (define hide.files (new check-box% 
                               [parent panel]
-                              [label "Hide dot prefix files and directories"]
+                              [label "Hide dot prefix files and directories."]
                               [value (get-preference 'files-viewer:filter-types3)]))
-      (define choice (new radio-box% [choices '("hide these files."
-                                                "show these files.")]
+      (define choice (new radio-box% [choices '("Hide these files."
+                                                "Show these files.")]
                           [label ""]
                           [parent panel]
                           [selection (if (get-preference 'files-viewer:filter-types2)
