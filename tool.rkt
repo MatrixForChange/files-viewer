@@ -93,7 +93,7 @@
                                 [highlighted "lightskyblue"]
                                 [callback (λ (c e)
                                             (change-to-directory (cdr (list-ref (send c get-path-elements)
-                                                      (get-field path-index e))))
+                                                                                (get-field path-index e))))
                                             (send *dir-control set-path (path-alist main-directory)))]))
         (send *dir-control set-path (path-alist main-directory))
         (set! *popup-menu (new files-popup-menu%

@@ -1,10 +1,45 @@
 (module hierlist-unit racket/base
-  (require racket/class
+   (require racket/class
            racket/unit
            mred/mred-sig
            mrlib/include-bitmap
            "hierlist-sig.rkt"
-           pict racket/gui racket/runtime-path)
+           pict racket/gui racket/runtime-path
+           pict/color)
+  (define display-text%
+    (class text%
+      (super-new)
+      (inherit invalidate-bitmap-cache get-padding
+               get-canvas)
+      (define word-filter "")
+      (define picture-cache #f)
+      (define/public (set-word-filter something)
+        (set! word-filter something)
+        (set! picture-cache (pict->bitmap (inset (frame
+                                           (inset (blue (text word-filter 'system 13)) 3)
+                                           #:line-width 1) 1)
+                                          #:make-bitmap
+                                          (λ (w h)
+                                            (make-object bitmap% w h #f #f 2.0))))
+        (invalidate-bitmap-cache 0.0 0.0 'display-end 'display-end))
+      (define/override (after-scroll-to)
+              (invalidate-bitmap-cache 0.0 0.0 'display-end 'display-end)
+              (super after-scroll-to))
+      (define/public (get-word-filter) word-filter)
+      (define/override (on-paint before? dc left top right bottom dx dy draw-caret)
+        (when (and (not (string=? "" word-filter))
+                   (not before?) picture-cache)
+          (define h-inset (send (get-canvas) horizontal-inset))
+          (define v-inset (send (get-canvas) vertical-inset))
+          (send dc draw-bitmap-section
+                picture-cache
+                (+ dx left) (+ dy top)
+                (+ dx left (- h-inset))
+                (+ dy top (- v-inset))
+                (- right left)
+                (- bottom top)))
+      )
+      ))
   (define (fit path)
     (pict->bitmap
      (scale-to-fit (bitmap (make-object bitmap% path 'png/alpha #f #f 2)) 16 16)
@@ -31,10 +66,10 @@
 
     (define transparent (make-object brush% "WHITE" 'transparent))
     (define transparent-pen (make-object pen% "WHITE" 1 'transparent))
-    (define black-xor-pen (make-object pen% "darkgray" 1 'solid))
+    (define black-xor-pen (make-object pen% "gray" 1 'solid))
     (define red (make-object brush% "RED" 'solid))
     (define blue (make-object brush% "BLUE" 'solid))
-    (define black-xor (make-object brush% "darkgray" 'solid))
+    (define black-xor (make-object brush% "gray" 'solid))
     (define arrow-cursor (make-object cursor% 'arrow))
 
     (define-values (up-bitmap down-bitmap up-click-bitmap down-click-bitmap)
@@ -291,14 +326,6 @@
                                    (set-max-width (if (positive? w)
                                                       w
                                                       'none)))))])]
-         [refresh (lambda (x y width height draw-caret background)
-                    (super refresh x y width height
-                           (if (and selected?
-                                    (or (not (send top show-focus))
-                                        (send top has-focus?)))
-                               (cons 0 1)
-                               draw-caret)
-                           background))]
          [on-paint
           (lambda (pre? dc left top_ right bottom dx dy caret)
             (when (and pre? selected?)
@@ -878,7 +905,9 @@
                            (set! selected-item #f))
                          (when (or clicked? on-select-always?)
                            (on-select #f))]))])
-        (define top-buffer (make-object hierarchical-list-text% this (lambda (i s c? s?) (do-select i s c? s?)) 0 #f))
+        (define top-buffer (make-object
+                               (make-hierarchical-list-text% display-text%)
+                             this (lambda (i s c? s?) (do-select i s c? s?)) 0 #f))
         (define selected #f)
         (define selected-item #f)
         (send top-buffer set-transparent (member 'transparent style))

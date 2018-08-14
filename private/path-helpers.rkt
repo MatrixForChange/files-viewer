@@ -55,11 +55,16 @@
       (define file (new button% [label "File (Enter)"]
                         [parent this][stretchable-width #t]
                         [callback (λ (c e)
-                                    (if (string=? (send name get-value) "")
-                                        (message-box "Error" "File name is empty,can't create file.")
-                                        (create-new-file current-path
-                                                         (send name get-value)
-                                                         ""))
+                                    (cond
+                                      [(string=? (send name get-value) "")
+                                       (message-box "Error" "File name is empty,can't create file.")]
+                                      [(path-has-extension? (send name get-value) ".rkt")
+                                       (create-new-file current-path
+                                                       (send name get-value)
+                                                       "#lang racket\n")]
+                                      [else (create-new-file current-path
+                                                       (send name get-value)
+                                                       "")])
                                     (send d show #f)
                                     )]))
 

@@ -43,13 +43,16 @@
     ((interface () set-text get-text))
     (inherit get-editor)
     (super-new)
-    (define/public (set-text str)
+    (define red-style (make-object style-delta%))
+    (send red-style set-delta-foreground "red")
+    (define/public (set-text str where)
       (define t (get-editor))
       (send t erase)
       (send t insert (file-icon-snip str))
       (send t insert " ")
       (send t insert str)
-      (send t change-style (make-object style-delta% 'change-alignment 'top) 0 (send t last-position)))
+      (send t change-style (make-object style-delta% 'change-alignment 'top) 0 (send t last-position))
+      (send t change-style red-style (+ (car where) 2) (+ (cdr where) 2)))
     (define/public (get-text)
       (define t (get-editor))
       (send t get-text))
@@ -95,10 +98,28 @@
                 )
     (super-new)
     (inherit delete-item get-items popup-menu allow-deselect get-editor
-             suspend-flush resume-flush refresh get-selected)
+             suspend-flush resume-flush refresh get-selected
+             )
     (define the-dir #f)
     (define opened (mutable-set))
     (allow-deselect #t)
+    (define/override (on-char ev)
+      (define c (send ev get-key-code))
+      (define old (send (get-editor) get-word-filter))
+      (match c
+        [#\backspace (send (get-editor) set-word-filter
+                           (if (string=? old "")
+                               ""
+                               (substring old 0 (- (string-length old) 1))))
+                     (update-files!)]
+        [(or (? (conjoin char? char-graphic?)) #\space)
+         (send (get-editor) set-word-filter (string-append old (string c)))
+         (update-files!)]
+        [else (void)])
+      (super on-char ev))
+                           
+      
+    
     (define (sort!)
       (send this sort (lambda (x y)
                         (define p1 (directory-exists? (send x user-data)))
@@ -134,17 +155,31 @@
                               (message-box "Error" "Can't open the directory.")))])
             (directory-list
              dir)))
+        (define compiled-regexp
+          (with-handlers ([exn:fail?
+                           (λ (e)
+                             #f)])
+            (regexp (format "(?i:~a)" (send (get-editor) get-word-filter)))))
         (for ([i files])
           (define is-directory (directory-exists? (build-path dir i)))
           (when (and (or is-directory
                          (not (xor (get-preference 'files-viewer:filter-types2)
                                    (ormap (λ (x) (path-has-extension? i x)) filter-types))))
-                     (not (and (get-preference 'files-viewer:filter-types3) (string-prefix? (path->string i) "."))))
+                     (not (and (get-preference 'files-viewer:filter-types3) (string-prefix? (path->string i) ".")))
+                     (or is-directory
+                         (not compiled-regexp)
+                         (regexp-match compiled-regexp
+                                       (path->string i)))
+                     )
             (define item (if is-directory
                              (send parent new-list compound-mixin)
                              (send parent new-item simple-mixin)))
             (send item user-data (build-path dir i))
-            (send item set-text (path->string i))
+            (if is-directory (send item set-text (path->string i))
+                (when compiled-regexp (send item set-text (path->string i) (car
+                                                      (regexp-match-positions
+                                                       compiled-regexp
+                                                       (path->string i))))))
             (when is-directory
               (send item set-task (thunk (update-directory! item (build-path dir i) filter-types)))
               (when (set-member? opened (send item user-data))
