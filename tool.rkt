@@ -182,7 +182,9 @@
       (define/private (safe-to-change-file? ed)
         (not (or (send ed is-modified?)
                  (send ed can-do-edit-operation? 'undo #t)
-                 (send ed can-do-edit-operation? 'redo #t))))
+                 (send ed can-do-edit-operation? 'redo #t)
+                 (send ed get-filename)
+                       )))
 
       (define/augment (on-close)
         (send fschange shutdown))

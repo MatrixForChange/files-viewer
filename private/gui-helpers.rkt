@@ -155,6 +155,8 @@
                               (message-box "Error" "Can't open the directory.")))])
             (directory-list
              dir)))
+        (define cute-syntax-enabled? (string-prefix? (send (get-editor) get-word-filter)
+                                                     "`"))
         (define compiled-regexp
           (with-handlers ([exn:fail?
                            (λ (e)
@@ -167,6 +169,7 @@
                                    (ormap (λ (x) (path-has-extension? i x)) filter-types))))
                      (not (and (get-preference 'files-viewer:filter-types3) (string-prefix? (path->string i) ".")))
                      (or is-directory
+                         cute-syntax-enabled?
                          (not compiled-regexp)
                          (regexp-match compiled-regexp
                                        (path->string i)))
@@ -175,11 +178,14 @@
                              (send parent new-list compound-mixin)
                              (send parent new-item simple-mixin)))
             (send item user-data (build-path dir i))
-            (if is-directory (send item set-text (path->string i))
-                (when compiled-regexp (send item set-text (path->string i) (car
-                                                      (regexp-match-positions
-                                                       compiled-regexp
-                                                       (path->string i))))))
+            (cond [is-directory (send item set-text (path->string i))]
+                  [(and compiled-regexp
+                           (not cute-syntax-enabled?))
+                  (send item set-text (path->string i) (car
+                                                        (regexp-match-positions
+                                                         compiled-regexp
+                                                         (path->string i))))]
+                  [else (send item set-text (path->string i) (cons 0 0))])
             (when is-directory
               (send item set-task (thunk (update-directory! item (build-path dir i) filter-types)))
               (when (set-member? opened (send item user-data))
