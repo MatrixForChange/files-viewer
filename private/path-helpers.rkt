@@ -17,7 +17,7 @@
 
 (define (delete-file-and-directory dparent path)
   (match (message-box "File Manager"
-                      (format "Are you sure to delete ~a" path)
+                      (format "Are you sure you want to delete ~a" path)
                       dparent '(ok-cancel))
     ['ok (delete-file-and-directory/recur path)]
     ['cancel (void)]))
@@ -35,7 +35,7 @@
                        (simplify-path (build-path path 'up name))
                        (build-path path name)))
   (if (file-exists? new-name)
-      (message-box "Error" "File exists,can't create!")
+      (message-box "Error" "File exists, can't create!")
       (let ([p (open-output-file new-name)])
         (display content p)
         (close-output-port p))))
@@ -57,7 +57,7 @@
                         [callback (λ (c e)
                                     (cond
                                       [(string=? (send name get-value) "")
-                                       (message-box "Error" "File name is empty,can't create file.")]
+                                       (message-box "Error" "File name is empty, can't create file.")]
                                       [(path-has-extension? (send name get-value) ".rkt")
                                        (create-new-file current-path
                                                        (send name get-value)
@@ -74,7 +74,7 @@
                                    (with-handlers
                                        ([exn:fail? (λ (e)
                                                      (message-box "Error"
-                                                                  "Fail to create directory here,or your directory name is empty."))])
+                                                                  "Fail to create directory here, or your directory name is empty."))])
                                      (make-directory (build-path current-path (send name get-value))))
                                    (send d show #f))]))
       (define/override (on-subwindow-char recv ev)
