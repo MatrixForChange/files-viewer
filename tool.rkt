@@ -9,15 +9,20 @@
 (define-unit tool@
   (import drracket:tool^)
   (export drracket:tool-exports^)
-  (match-define (and phase1 phase2) void)
+  (define phase1 (thunk
+                  (preferences:set-default 'files-viewer:directory
+                                           (find-system-path 'home-dir)
+                                           (λ (x) (and x (directory-exists? x))))
+                  (preferences:set-default 'files-viewer:behavior-open
+                                           2
+                                           (λ (x) (member x '(0 1 2))))
+                  ))
+  (define phase2 void)
   
   (define drracket-frame-mixin
     (mixin (drracket:unit:frame<%> (class->interface drracket:unit:frame%)) ()
       
-      (define main-directory (let ([main-dir (get-preference 'files-viewer:directory)])
-                               (if (and main-dir (directory-exists? main-dir))
-                                   main-dir
-                                   (find-system-path 'home-dir))))
+      (define main-directory (preferences:get 'files-viewer:directory))
       (define is-show (get-preference 'files-viewer:is-show))
       (define auto-refresh? (get-preference 'files-viewer:auto-refresh))
       
@@ -50,8 +55,8 @@
               (directory-list
                dir))
             (set! main-directory dir)
-            (put-preferences '(files-viewer:directory)
-                             (list (~a dir)))
+            (preferences:set 'files-viewer:directory
+                             (~a dir))
             (send *dir-control set-path (path-alist dir))
             (update-files!))))
 
@@ -180,11 +185,18 @@
         (make-object vertical-panel% area))
 
       (define/private (safe-to-change-file? ed)
-        (not (or (send ed is-modified?)
-                 (send ed can-do-edit-operation? 'undo #t)
-                 (send ed can-do-edit-operation? 'redo #t)
-                 (send ed get-filename)
-                       )))
+        (define behavior (preferences:get 'files-viewer:behavior-open))
+        (match behavior
+          [0 (not (send ed is-modified?))]
+          [1 (not (or (send ed is-modified?)
+                      (send ed can-do-edit-operation? 'undo #t)
+                      (send ed can-do-edit-operation? 'redo #t)
+                      ))]
+          [2 (not (or (send ed is-modified?)
+                      (send ed can-do-edit-operation? 'undo #t)
+                      (send ed can-do-edit-operation? 'redo #t)
+                      (send ed get-filename)
+                      ))]))
 
       (define/augment (on-close)
         (send fschange shutdown))

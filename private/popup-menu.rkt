@@ -1,5 +1,6 @@
 #lang racket
-(require syntax/parse/define (for-syntax racket/syntax) racket/gui)
+(require syntax/parse/define (for-syntax racket/syntax) racket/gui
+         framework)
 (provide files-popup-menu%)
 (define files-popup-menu%
   (class popup-menu%
@@ -66,6 +67,9 @@
                        (set! auto-refresh-status (not auto-refresh-status))
                        (send auto-refresh set-label (refresh-label auto-refresh-status))
                        (auto-refresh-callback auto-refresh-status))]))
+    (new menu-item% [label "Extra Settings"]
+         [parent this]
+         [callback (λ (c e) (send (new extra-settings%) show #t))])
     ))
 
 
@@ -148,7 +152,31 @@
       (super on-subwindow-char recv ev))
     (send name-text focus)
     ))
-    
+(define extra-settings%
+  (class frame%
+    (super-new [width 400][height 500][label "Extra Settings"])
+    (define tp (new tab-panel% [parent this][choices '("Legacy Features"
+                                                       "Experimental Features")]
+                    [callback (λ (c e) (update-panels))]))
+    (define change-current-tab-to-a-new-file-when
+      (new radio-box%
+           [label "Change current tab to a new file when"]
+           [choices '("current tab has no changes to save.(Old)"
+                      "current tab can't do any redo and undo operations.(Old)"
+                      "current tab has a file name.(Default)")]
+           [parent tp]
+           [selection (preferences:get 'files-viewer:behavior-open)]
+           [callback (λ (c e)
+                       (preferences:set 'files-viewer:behavior-open
+                                        (send change-current-tab-to-a-new-file-when
+                                              get-selection)))]))
+    (define (update-panels)
+      (send tp change-children (λ (l)
+                                 (match (send tp get-selection)
+                                   [0 (list change-current-tab-to-a-new-file-when)]
+                                   [1 (list)]))))
+    (update-panels)
+    ))
                                               
     
 
