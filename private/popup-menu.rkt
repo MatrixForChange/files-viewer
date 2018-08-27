@@ -71,7 +71,7 @@
          [parent this]
          [callback (λ (c e) (send (new extra-settings%) show #t))])
     ))
-
+ 
 
 (define (refresh-label v)
   (if v "Disable Auto Refresh" "Enable Auto Refresh"))
@@ -170,11 +170,21 @@
                        (preferences:set 'files-viewer:behavior-open
                                         (send change-current-tab-to-a-new-file-when
                                               get-selection)))]))
+
+    (define background-color
+      (new text-field% [label "Background Color(developing):"]
+           [init-value (preferences:get 'files-viewer:background-color)]
+           [parent tp]
+           [callback (λ (c e)
+                       (define v (send background-color get-value))
+                       (when (send the-color-database find-color v)
+                         (preferences:set 'files-viewer:background-color
+                                          v)))]))
     (define (update-panels)
       (send tp change-children (λ (l)
                                  (match (send tp get-selection)
                                    [0 (list change-current-tab-to-a-new-file-when)]
-                                   [1 (list)]))))
+                                   [1 (list background-color)]))))
     (update-panels)
     ))
                                               

@@ -37,6 +37,11 @@
       (send s set-bitmap (if (is-racket? str) racket-icon normal-icon))
       s)))
 
+(define (editor-snip-mixin x)
+  (class (editor-snip:decorated-mixin x)
+    (super-new)
+    (define/override (get-color)
+      (preferences:get 'files-viewer:background-color))))
 
 (define simple-mixin
   (mixin (hierarchical-list-item<%>)
@@ -175,8 +180,8 @@
                                        (path->string i)))
                      )
             (define item (if is-directory
-                             (send parent new-list compound-mixin)
-                             (send parent new-item simple-mixin)))
+                             (send parent new-list (compose1 compound-mixin identity))
+                             (send parent new-item (compose1 simple-mixin identity))))
             (send item user-data (build-path dir i))
             (cond [is-directory (send item set-text (path->string i))]
                   [(and compiled-regexp
