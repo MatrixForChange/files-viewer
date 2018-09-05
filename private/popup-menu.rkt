@@ -151,7 +151,9 @@
         (send ok-button command (make-object control-event% 'button (current-milliseconds))))
       (super on-subwindow-char recv ev))
     (send name-text focus)
-    ))
+    )) 
+
+
 (define extra-settings%
   (class frame%
     (super-new [width 400][height 500][label "Extra Settings"])
@@ -171,20 +173,11 @@
                                         (send change-current-tab-to-a-new-file-when
                                               get-selection)))]))
 
-    (define background-color
-      (new text-field% [label "Background Color(developing):"]
-           [init-value (preferences:get 'files-viewer:background-color)]
-           [parent tp]
-           [callback (λ (c e)
-                       (define v (send background-color get-value))
-                       (when (send the-color-database find-color v)
-                         (preferences:set 'files-viewer:background-color
-                                          v)))]))
     (define (update-panels)
       (send tp change-children (λ (l)
                                  (match (send tp get-selection)
                                    [0 (list change-current-tab-to-a-new-file-when)]
-                                   [1 (list background-color)]))))
+                                   [1 (list)]))))
     (update-panels)
     ))
                                               

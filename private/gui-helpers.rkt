@@ -37,11 +37,6 @@
       (send s set-bitmap (if (is-racket? str) racket-icon normal-icon))
       s)))
 
-(define (editor-snip-mixin x)
-  (class (editor-snip:decorated-mixin x)
-    (super-new)
-    (define/override (get-color)
-      (preferences:get 'files-viewer:background-color))))
 
 (define simple-mixin
   (mixin (hierarchical-list-item<%>)
@@ -214,7 +209,7 @@
         (when i (send i select #f))
         )
       (super on-event ev)
-      (when (send ev button-down? 'right)
+      (when (send ev button-up? 'right)
         (popup-menu my-popup-menu (send ev get-x)
                     (send ev get-y)))
       

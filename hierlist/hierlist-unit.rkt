@@ -1,10 +1,11 @@
 (module hierlist-unit racket/base
-   (require racket/class
+  (require racket/class
            racket/unit
            mred/mred-sig
            mrlib/include-bitmap
            "hierlist-sig.rkt"
            pict racket/gui racket/runtime-path
+           framework
            pict/color)
   (define display-text%
     (class text%
@@ -16,15 +17,15 @@
       (define/public (set-word-filter something)
         (set! word-filter something)
         (set! picture-cache (pict->bitmap (inset (frame
-                                           (inset (blue (text word-filter 'system 13)) 3)
-                                           #:line-width 1) 1)
+                                                  (inset (blue (text word-filter 'system 13)) 3)
+                                                  #:line-width 1) 1)
                                           #:make-bitmap
                                           (λ (w h)
                                             (make-object bitmap% w h #f #f 2.0))))
         (invalidate-bitmap-cache 0.0 0.0 'display-end 'display-end))
       (define/override (after-scroll-to)
-              (invalidate-bitmap-cache 0.0 0.0 'display-end 'display-end)
-              (super after-scroll-to))
+        (invalidate-bitmap-cache 0.0 0.0 'display-end 'display-end)
+        (super after-scroll-to))
       (define/public (get-word-filter) word-filter)
       (define/override (on-paint before? dc left top right bottom dx dy draw-caret)
         (when (and (not (string=? "" word-filter))
@@ -38,7 +39,7 @@
                 (+ dy top (- v-inset))
                 (- right left)
                 (- bottom top)))
-      )
+        )
       ))
   (define (fit path)
     (pict->bitmap
@@ -495,6 +496,7 @@
         (hide-caret #t)))
 
     (define hierarchical-list-text% (make-hierarchical-list-text% text%))
+    
 
     ;; Snip for a single list item
     (define hierarchical-item-snip%

@@ -16,9 +16,6 @@
                   (preferences:set-default 'files-viewer:behavior-open
                                            2
                                            (λ (x) (member x '(0 1 2))))
-                  (preferences:set-default 'files-viewer:background-color
-                                           "white"
-                                           (λ (x) (send the-color-database find-color x)))
                   ))
   (define phase2 void)
   
