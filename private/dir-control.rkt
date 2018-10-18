@@ -1,4 +1,9 @@
 #lang racket/base
+
+;; (c) 2018 Stephen De Gabrielle
+;; original at 
+;; https://github.com/spdegabrielle/dir-control/edit/master/dir-control.rkt
+
 (require racket/gui/base
          racket/class
          racket/list)
