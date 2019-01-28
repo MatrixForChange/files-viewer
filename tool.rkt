@@ -16,6 +16,9 @@
                   (preferences:set-default 'files-viewer:behavior-open
                                            2
                                            (λ (x) (member x '(0 1 2))))
+                  (preferences:set-default 'files-viewer:binary-file-open
+                                           #f
+                                           boolean?)
                   ))
   (define phase2 void)
   
@@ -167,7 +170,11 @@
         (set! *files (new directory-list% 
                           [parent real-area]
                           [select-callback (lambda (i)
-                                             (when (file-exists? i)
+                                             (define is-binary-file-open
+                                               (preferences:get 'files-viewer:binary-file-open))
+                                             (when (and (file-exists? i)
+                                                        (or is-binary-file-open
+                                                            (not (binary-file? i))))
                                                (cond
                                                  [(find-matching-tab i) => change-to-tab]
                                                  [(safe-to-change-file? (send (get-current-tab)  get-defs)) (change-to-file i)]

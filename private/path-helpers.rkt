@@ -1,8 +1,18 @@
 #lang racket
 (provide path-/string new-file-dialog delete-file-and-directory
-         process/safe)
+         process/safe binary-file?)
 (require rackunit racket/gui syntax/parse/define (for-syntax racket/syntax)
+         "contents.rkt"
          )
+(define-simple-macro (define-file-type ft suffixes ...)
+  (define (ft f)
+    (or (path-has-extension? f suffixes)
+        ...)))
+(define-file-type binary-file?
+  #".exe" #".dll" #".lib" #".o" #".a" #".so"
+  #".zo" #".dep" #".bmp" #".jpg" #".jpeg"
+  #".zip" #".rar" #".7z")
+
 
 (define (process/safe cmd)
   (match-define (list in1 out _ in2 _) (process cmd))
@@ -77,6 +87,12 @@
                                                                   "Fail to create directory here, or your directory name is empty."))])
                                      (make-directory (build-path current-path (send name get-value))))
                                    (send d show #f))]))
+      (define gitignore (new button% [label "Racket GitIgnore"]
+                             [parent this][stretchable-width #t]
+                             [callback (λ (c e)
+                                         (create-new-file current-path
+                                                          ".gitignore"
+                                                          CONTENT-GITIGNORE))]))
       (define/override (on-subwindow-char recv ev)
         (when (equal? (send ev get-key-code) #\return)
           (send file command (make-object control-event% 'button (current-milliseconds))))
@@ -89,6 +105,3 @@
   )
        
 
-(module+ test
-  (check-equal? "minecraft" (path-/string (string->path "d:/minecraft")
-                                          (string->path "d:/"))))

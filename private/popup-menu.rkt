@@ -156,7 +156,7 @@
 
 (define extra-settings%
   (class frame%
-    (super-new [width 400][height 500][label "Extra Settings"])
+    (super-new [width 400][height 300][label "Extra Settings"])
     (define tp (new tab-panel% [parent this][choices '("Legacy Features"
                                                        "Experimental Features")]
                     [callback (λ (c e) (update-panels))]))
@@ -173,11 +173,20 @@
                                         (send change-current-tab-to-a-new-file-when
                                               get-selection)))]))
 
+    (define is-binary-file-open
+      (new check-box%
+           [label "Open a known binary file in a new tab."]
+           [parent tp]
+           [value (preferences:get 'files-viewer:binary-file-open)]
+           [callback (λ (c e)
+                       (preferences:set 'files-viewer:binary-file-open
+                                        (send is-binary-file-open get-value)))]))
+
     (define (update-panels)
       (send tp change-children (λ (l)
                                  (match (send tp get-selection)
                                    [0 (list change-current-tab-to-a-new-file-when)]
-                                   [1 (list)]))))
+                                   [1 (list is-binary-file-open)]))))
     (update-panels)
     ))
                                               
