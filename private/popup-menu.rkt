@@ -55,6 +55,9 @@
     (new separator-menu-item% [parent this])
     (define-menu-item open-terminal-here "Open Terminal Here")
     (define-menu-item terminal-config "Config for Terminal Launcher")
+    (new separator-menu-item% [parent this])
+    (define-menu-item git-pull "Git Pull")
+    (define-menu-item git-push "Git Push")
     
     (new separator-menu-item% [parent this])
     
