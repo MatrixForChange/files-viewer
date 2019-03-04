@@ -164,6 +164,24 @@
                                 (thunk 
                                  (define d (send (send this get-current-tab) get-directory))
                                  (change-to-directory d))]
+                               [git-pull-callback
+                                (thunk
+                                 (define item (send *files get-selected))
+                                 (define p (if item (send item user-data) main-directory))
+                                 (define t (new terminal%))
+                                 (thread (thunk (send t run-commands
+                                                      (list "git pull origin master")
+                                                      p ))))]
+                               [git-push-callback
+                                (thunk
+                                 (define item (send *files get-selected))
+                                 (define p (if item (send item user-data) main-directory))
+                                 (define t (new terminal%))
+                                 (thread (thunk (send t run-commands
+                                                      (list "git commit --all -m \"commit through files-viewer\""
+                                                            "git push origin master")
+                                                      p
+                                                      ))))]
                                ))
         
           
