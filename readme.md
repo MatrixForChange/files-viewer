@@ -3,7 +3,7 @@ The project is under LGPL LICENSE (same as Racket).
 
 Issues and pull requests are welcomed.  
  
-Latest version : 0.00.44
+Latest version : 0.00.45
 
 # Usage
 To edit a file , double click the item.
@@ -18,5 +18,7 @@ To show or hide the file manager , View -> Show/Hide the File Manager.
 #Update Log
 
 0.00.44 Don't open any binary files in new tabs by default.
+
+0.00.45 add git push button and git pull button
 
 
