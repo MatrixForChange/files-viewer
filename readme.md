@@ -19,6 +19,6 @@ To show or hide the file manager , View -> Show/Hide the File Manager.
 
 0.00.44 Don't open any binary files in new tabs by default.
 
-0.00.45 add git push button and git pull button
+0.00.45 add git push button and git pull button (by run commands "git pull origin master" and "git push origin master")
 
 
