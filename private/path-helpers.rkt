@@ -74,7 +74,7 @@
                                                        "#lang racket\n")]
                                       [else (create-new-file current-path
                                                        (send name get-value)
-                                                       "")])
+                                                       "")])   
                                     (send d show #f)
                                     )]))
 
@@ -93,6 +93,11 @@
                                          (create-new-file current-path
                                                           ".gitignore"
                                                           CONTENT-GITIGNORE))]))
+
+      #;(define info-file (new button% [label "info.rkt"]
+                             [parent this][stretechable-width #t]
+                             [callback (λ (c e)
+                                         (void))]))
       (define/override (on-subwindow-char recv ev)
         (when (equal? (send ev get-key-code) #\return)
           (send file command (make-object control-event% 'button (current-milliseconds))))
