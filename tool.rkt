@@ -19,6 +19,12 @@
                   (preferences:set-default 'files-viewer:binary-file-open
                                            #f
                                            boolean?)
+                  (preferences:set-default 'files-viewer:cmd
+                                           (match (system-type 'os)
+                                             ['windows "start cmd /d ~a"]
+                                             ['macosx "open -a /Applications/Utilities/Terminal.app ~a"]
+                                             [_ ""])
+                                           string?)
                   ))
   (define phase2 void)
   
@@ -134,7 +140,7 @@
                                                             )]
                                [open-terminal-here-callback
                                 (thunk (define item (send *files get-selected))
-                                       (define cmd (get-preference 'files-viewer:cmd))
+                                       (define cmd (preferences:get 'files-viewer:cmd))
                                        (define p (if item (send item user-data) main-directory))
                                        (define path (if (file-exists? p) (simplify-path
                                                                           (build-path p 'up))

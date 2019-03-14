@@ -1,5 +1,5 @@
 #lang racket
-(require racket/gui)
+(require racket/gui framework)
 (provide rename-dialog% cmd-dialog%)
 (define rename-dialog%
   (class dialog%
@@ -31,7 +31,7 @@
                    [parent this]))
     (define f (new text-field%
                    [label "Command:"]
-                   [init-value (let ([old (get-preference 'files-viewer:cmd)])
+                   [init-value (let ([old (preferences:get 'files-viewer:cmd)])
                                  (if old old ""))]
                    [parent this]))
     (define p (new horizontal-panel% [parent this][alignment '(right bottom)]))
@@ -39,7 +39,7 @@
                         [callback (λ (c e) (send this show #f))]))
     (define ok (new button% [label "OK"][parent p]
                     [callback (λ (c e)
-                                (put-preferences '(files-viewer:cmd) (list (send f get-value)))
+                                (preferences:set 'files-viewer:cmd (send f get-value))
                                 (send this show #f))])
       )
     (send f focus)
