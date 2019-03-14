@@ -21,6 +21,6 @@ To show or hide the file manager , View -> Show/Hide the File Manager.
 
 0.00.45 add git push button and git pull button (by run commands "git pull origin master" and "git push origin master")
 
-0.00.46 add commit message window;add template for info.rkt
+0.00.46 add commit message window;add template for info.rkt;set the default value for terminal luancher on windows and macos,closes #23
 
 
