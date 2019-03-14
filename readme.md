@@ -15,7 +15,7 @@ To show or hide the file manager , View -> Show/Hide the File Manager.
 ![default](https://user-images.githubusercontent.com/22510026/43937527-cf6141a8-9c90-11e8-9277-9d6e20b12e8b.png)
 
 
-#Update Log
+# Update Log
 
 0.00.44 Don't open any binary files in new tabs by default.
 
