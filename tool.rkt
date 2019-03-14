@@ -176,12 +176,15 @@
                                 (thunk
                                  (define item (send *files get-selected))
                                  (define p (if item (send item user-data) main-directory))
+                                 (new git-commit%
+                                      [parent this]
+                                      [content-callback (λ (c)
                                  (define t (new terminal%))
                                  (thread (thunk (send t run-commands
-                                                      (list "git commit --all -m \"commit through files-viewer\""
+                                                      (list (format "git commit --all -m ~s" c)
                                                             "git push origin master")
                                                       p
-                                                      ))))]
+                                                      ))))]))]
                                ))
         
           

@@ -2,7 +2,7 @@
 (provide path-/string new-file-dialog delete-file-and-directory
          process/safe binary-file?)
 (require rackunit racket/gui syntax/parse/define (for-syntax racket/syntax)
-         "contents.rkt"
+         "contents.rkt" "info-instructor.rkt"
          )
 (define-simple-macro (define-file-type ft suffixes ...)
   (define (ft f)
@@ -75,7 +75,7 @@
                                       [else (create-new-file current-path
                                                        (send name get-value)
                                                        "")])   
-                                    (send d show #f)
+                                    (send this show #f)
                                     )]))
 
       (define dir (new button% [label "Directory"]
@@ -86,18 +86,27 @@
                                                      (message-box "Error"
                                                                   "Fail to create directory here, or your directory name is empty."))])
                                      (make-directory (build-path current-path (send name get-value))))
-                                   (send d show #f))]))
+                                   (send this show #f))]))
       (define gitignore (new button% [label "Racket GitIgnore"]
                              [parent this][stretchable-width #t]
                              [callback (λ (c e)
                                          (create-new-file current-path
                                                           ".gitignore"
-                                                          CONTENT-GITIGNORE))]))
+                                                          CONTENT-GITIGNORE)
+                                         (send this show #f))]))
 
-      #;(define info-file (new button% [label "info.rkt"]
-                             [parent this][stretechable-width #t]
+      (define info-file (new button% [label "info.rkt"]
+                             [parent this][stretchable-width #t]
                              [callback (λ (c e)
-                                         (void))]))
+                                         (define info-ins (new instruction-dialog% [parent dparent]
+                                                               [content-callback (λ (c)
+                                                                                   (create-new-file current-path
+                                                                                                   "info.rkt"
+                                                                                                   c))]))
+                                         (send this show #f)
+                                         (send info-ins show #t)
+                                         
+                                           )]))
       (define/override (on-subwindow-char recv ev)
         (when (equal? (send ev get-key-code) #\return)
           (send file command (make-object control-event% 'button (current-milliseconds))))
