@@ -21,7 +21,7 @@
                                            boolean?)
                   (preferences:set-default 'files-viewer:cmd
                                            (match (system-type 'os)
-                                             ['windows "start cmd /d ~a"]
+                                             ['windows "start /d ~a cmd"]
                                              ['macosx "open -a /Applications/Utilities/Terminal.app ~a"]
                                              [_ ""])
                                            string?)
