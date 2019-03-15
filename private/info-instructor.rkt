@@ -8,6 +8,7 @@
                [width 600]
                [height 480])
     (define pkg-name (new text-field% [parent this][label "package name:"]))
+    (send pkg-name focus)
     (define pkg-version (new text-field% [parent this][label "package version:"]))
     (define pkg-collection (new radio-box% [label "package collections:  "]
                                 [parent this]
