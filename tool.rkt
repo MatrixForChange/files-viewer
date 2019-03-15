@@ -187,7 +187,8 @@
                                       [content-callback (λ (c)
                                  (define t (new terminal%))
                                  (thread (thunk (send t run-commands
-                                                      (list (format "git commit --all -m ~s" c)
+                                                      (list "git add --all"
+                                                       (format "git commit -m ~s" c)
                                                             "git push origin master")
                                                       p
                                                       ))))]))]
