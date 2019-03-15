@@ -39,15 +39,22 @@
                                 #f)) lst)))
     (define dependencies (new tab-panel% [parent this][choices (list "Base Libs" "Gui Libs")]
                               [callback (λ (c e) (update-panels))]))
-    (define base-libs (map generate-control '("base" "rackunit-lib" "scheme-lib"
+    (define base-libs (map generate-control '("base" "scheme-lib"
                                                      "compatibility-lib"
                                                      "threading"
                                                      )))
     (define gui-libs (map generate-control
-                          '("gui-lib" "scribble-lib" "pict-lib" "plot-gui-lib")))
+                          '("gui-lib"  "pict-lib" "plot-gui-lib")))
 
     
     (update-panels)
+    (define build-deps-panel (new group-box-panel% [parent this]
+                                  [label "build dependencies"]))
+    (define build-libs (map (lambda (x)
+                              (new check-box% [parent build-deps-panel]
+                                   [stretchable-width #t]
+                                   [label x]))
+                            '("scribble-lib" "rackunit-lib")))
     (define ok-button (new button% [parent this][label "OK"][stretchable-width #t]
                            [callback (λ (c e)
                                        (define sexps `((define name ,(send pkg-name get-value))
@@ -56,8 +63,10 @@
                                                                              [0 (send pkg-name get-value)]
                                                                              [1 'multi]
                                                                              [2 (send pkg-collection-name get-value)]))
-                                                       (define deps ,(append (get-libs base-libs)
-                                                                             (get-libs gui-libs)))))
+                                                       (define deps (quote ,(append (get-libs base-libs)
+                                                                             (get-libs gui-libs))))
+                                                       (define build-deps (quote ,(append (get-libs build-libs))))
+                                                       ))
                                        (content-callback (string-append "#lang info\n"
                                                (string-join
                                                 (map (lambda (x)
@@ -68,5 +77,7 @@
                                        (send this show #f)
                                        )]))
     ))
+(module+ test
+(send (new instruction-dialog% [content-callback display]) show #t))
 
 
