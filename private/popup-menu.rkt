@@ -25,8 +25,8 @@
            [label "Workspace Manager"]
            [parent workspaces]
            [callback (λ (c e) (send (new workspace-manager%) show #t))])
-      (new separator-menu-item% [parent workspaces])
-      (when prefs
+      (when (not (empty? prefs))
+        (new separator-menu-item% [parent workspaces])
         (for ([i prefs])
           (new menu-item% [label (first i)]
                [parent workspaces][callback (λ (c e)
