@@ -68,6 +68,10 @@
                                     (cond
                                       [(string=? (send name get-value) "")
                                        (message-box "Error" "File name is empty, can't create file.")]
+                                      [(string=? (send name get-value) "tool.rkt")
+                                       (create-new-file current-path
+                                                        "tool.rkt"
+                                                        CONTENT-PLUGIN)]
                                       [(path-has-extension? (send name get-value) ".rkt")
                                        (create-new-file current-path
                                                        (send name get-value)
