@@ -45,7 +45,7 @@
                                                      "threading"
                                                      )))
     (define gui-libs (map generate-control
-                          '("gui-lib"  "pict-lib" "plot-gui-lib")))
+                          '("gui-lib"  "pict-lib" "plot-gui-lib" "drracket" "drracket-plugin-lib")))
 
     
     (update-panels)
