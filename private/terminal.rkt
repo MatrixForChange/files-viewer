@@ -21,6 +21,7 @@
         (send edt output (port->string stdout))
         (send edt output (port->string stderr))
         (close-output-port stdin)
+        (send edt output "\n")
         )
       (send edt output "Work Done!\n")
       )
