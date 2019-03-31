@@ -30,7 +30,7 @@
 (define terminal-editor%
   (class color:text%
     (super-new [auto-wrap #t])
-    (inherit insert last-position)
+    (inherit insert last-position begin-edit-sequence end-edit-sequence)
     (define lock #f)
     (define/augment (can-insert? s l)
       lock)
@@ -38,7 +38,9 @@
       lock)
     (define/public (output t)
       (set! lock #t)
+      (begin-edit-sequence)
       (insert t (last-position))
+      (end-edit-sequence)
       (set! lock #f))
     ))
 
