@@ -18,7 +18,7 @@
     (define workspaces (new menu% [label "Workspaces"][parent this]))
     
     (define (get-workspaces+refresh)
-      (define prefs (get-preference 'files-viewer:workspaces))
+      (define prefs (preferences:get 'files-viewer:workspaces))
       (for ([i (send workspaces get-items)])
         (send i delete))
       (new menu-item%
@@ -83,7 +83,7 @@
   (class frame%
     (super-new [label "Workspace Manager"][width 540][height 410])
     (define (refresh)
-      (define prefs (get-preference 'files-viewer:workspaces))
+      (define prefs (preferences:get 'files-viewer:workspaces))
       (when prefs
         (send ws set (map first prefs)
               (map second prefs))))
@@ -101,13 +101,12 @@
                                [parent bp]
                                [callback (λ (c e) (define s (send ws get-selections))
                                            (unless (null? s)
-                                             (put-preferences '(files-viewer:workspaces)
-                                                              (list
+                                             (preferences:set 'files-viewer:workspaces
                                                                (for/list ([(x i)
                                                                            (in-indexed
-                                                                            (get-preference 'files-viewer:workspaces))]
+                                                                            (preferences:get 'files-viewer:workspaces))]
                                                                           #:unless (= (first s) i))
-                                                                 x)))
+                                                                 x))
                                              (refresh)
                                              ))]))
     (define new-button (new button% [label "Add New Workspace"]
@@ -143,11 +142,9 @@
                                           (send path-text set-value (path->string res))))]))
     (define cancel-button (new button% [parent bp][label "Cancel"][callback (λ (c e) (send this show #f))]))
     (define ok-button (new button% [parent bp][label "OK"]
-                           [callback (λ (c e) (define prefs (get-preference 'files-viewer:workspaces))
-                                       (set! prefs (if prefs prefs '()))
-                                       (put-preferences '(files-viewer:workspaces)
-                                                        (list (append prefs (list (list (send name-text get-value)
-                                                                                        (send path-text get-value))))))
+                           [callback (λ (c e) (define prefs (preferences:get 'files-viewer:workspaces))
+                                       (preferences:set 'files-viewer:workspaces (append prefs (list (list (send name-text get-value)
+                                                                                        (send path-text get-value)))))
                                        (send this show #f))]))
     (define/override (on-subwindow-char recv ev)
       (when (equal? (send ev get-key-code) #\return)

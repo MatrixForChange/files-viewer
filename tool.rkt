@@ -25,6 +25,9 @@
                                              ['macosx "open -a /Applications/Utilities/Terminal.app ~a"]
                                              [_ ""])
                                            string?)
+                  (preferences:set-default 'files-viewer:workspaces
+                                           '()
+                                           list?)
                   ))
   (define phase2 void)
   
