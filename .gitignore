@@ -1,2 +1,9 @@
-*.bak
+*.rkt
 compiled/
+/doc/
+*.[0-9]
+*.bak
+.DS_Store
+.\#*
+\#*
+*~

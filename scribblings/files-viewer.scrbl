@@ -15,7 +15,7 @@
 @title{Files-viewer is a file manager plugin for DrRacket.}
 
 @;author{风变科技-矩阵工作室}
-@(smaller (author+email "风变科技-矩阵工作室" "bling@forchange.cn" #:obfuscate? #t))
+@(smaller (author+email "风变科技-矩阵工作室 Qi Jiang" "1227847322@qq.com" #:obfuscate? #t))
 
 @section{Introduction}
 
