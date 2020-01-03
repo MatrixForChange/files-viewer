@@ -2,8 +2,18 @@
 The project is under LGPL LICENSE (same as Racket).
 
 Issues and pull requests are welcomed.  
- 
+
 Latest version : 0.00.46
+
+# Installation
+
+terminal: `raco pkg install files-viewer`
+
+or
+
+drracket: File -> Package Manager
+
+Please see the [files-viewer documentation](https://docs.racket-lang.org/files-viewer/) for more details.
 
 # Usage
 To edit a file , double click the item.
