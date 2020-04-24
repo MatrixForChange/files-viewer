@@ -78,7 +78,5 @@
                                        (send this show #f)
                                        )]))
     ))
-(module+ test
-(send (new instruction-dialog% [content-callback display]) show #t))
 
 
