@@ -8,13 +8,13 @@
     (define/augment (get-default-percentages i)
       (cond
         [(= i 2)
-         (define default-percentages (get-preference 'files-viewer:percentages))
+         (define default-percentages (preferences:get 'files-viewer:percentages))
          (if default-percentages default-percentages (list #e0.15 #e0.85))]
         [else (build-list i (λ (x) (/ i)))]))
     (define/augment (after-percentage-change)
       (define current (get-percentages))
       (when (= (length current) 2)
-        (put-preferences '(files-viewer:percentages) (list current)))
+        (preferences:set 'files-viewer:percentages current))
       (inner (void) after-percentage-change))
     (super-new)))
 
@@ -129,7 +129,7 @@
     (define/public (update-files!)
       (define e (get-editor))
       (define ad (send e get-admin))
-      (define filter-types (get-preference 'files-viewer:filter-types))
+      (define filter-types (preferences:get 'files-viewer:filter-types))
       (suspend-flush)
       (send e begin-edit-sequence)
       (define-values (x y w h) (values (box 0) (box 0) (box 0) (box 0)))
@@ -165,9 +165,9 @@
         (for ([i files])
           (define is-directory (directory-exists? (build-path dir i)))
           (when (and (or is-directory
-                         (not (xor (get-preference 'files-viewer:filter-types2)
+                         (not (xor (preferences:get 'files-viewer:filter-types2)
                                    (ormap (λ (x) (path-has-extension? i x)) filter-types))))
-                     (not (and (get-preference 'files-viewer:filter-types3) (string-prefix? (path->string i) ".")))
+                     (not (and (preferences:get 'files-viewer:filter-types3) (string-prefix? (path->string i) ".")))
                      (or is-directory
                          cute-syntax-enabled?
                          (not compiled-regexp)
