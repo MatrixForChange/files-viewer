@@ -1,11 +1,13 @@
 #lang racket
-(require racket/gui)
+(require racket/gui
+         framework
+         framework/preferences)
 (provide filter-dialog)
 (define (filter-dialog dparent)
   (define filter-dialog%
     (class dialog%
       (super-new)
-      (define default (get-preference 'files-viewer:filter-types))
+      (define default (preferences:get 'files-viewer:filter-types))
       (define panel (new vertical-panel% [parent this]
                          [alignment '(left top)]))
       (define panel2 (new horizontal-panel% [parent this]
@@ -14,12 +16,12 @@
       (define hide.files (new check-box% 
                               [parent panel]
                               [label "Hide dot prefix files and directories."]
-                              [value (get-preference 'files-viewer:filter-types3)]))
+                              [value (preferences:get 'files-viewer:filter-types3)]))
       (define choice (new radio-box% [choices '("Hide these files."
                                                 "Show these files.")]
                           [label ""]
                           [parent panel]
-                          [selection (if (get-preference 'files-viewer:filter-types2)
+                          [selection (if (preferences:get 'files-viewer:filter-types2)
                                          1 0)]))
       (new message% [label "Files Types(such as \".bak .zo\"):"][parent panel])                    
       (define types (new text-field% [label ""]
@@ -30,13 +32,9 @@
                                       (send this show #f))]))
       (define ok (new button% [label "OK"][parent panel2]
                       [callback (λ (c e)
-                                  (put-preferences '(files-viewer:filter-types
-                                                     files-viewer:filter-types2
-                                                     files-viewer:filter-types3)
-                                                   (list (string-split (send types get-value) " ")
-                                                         (= 1 (send choice get-selection))
-                                                         (send hide.files get-value)
-                                                         ))
+                                  (preferences:set 'files-viewer:filter-types (string-split (send types get-value) " "))
+                                  (preferences:set 'files-viewer:filter-types2 (= 1 (send choice get-selection)))
+                                  (preferences:set 'files-viewer:filter-types3 (send hide.files get-value))
                                   (send this show #f))]))
       
       (send types focus)
