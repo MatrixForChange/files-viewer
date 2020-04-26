@@ -23,7 +23,7 @@
                                            #t
                                            boolean?)
                   (preferences:set-default 'files-viewer:filter-types3
-                                           #f
+                                           #t
                                            boolean?)
                   (preferences:set-default 'files-viewer:filter-types2
                                            #f
