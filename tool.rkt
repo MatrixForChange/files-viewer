@@ -19,6 +19,24 @@
                   (preferences:set-default 'files-viewer:binary-file-open
                                            #f
                                            boolean?)
+                  (preferences:set-default 'files-viewer:is-show
+                                           #t
+                                           boolean?)
+                  (preferences:set-default 'files-viewer:filter-types3
+                                           #f
+                                           boolean?)
+                  (preferences:set-default 'files-viewer:filter-types2
+                                           #f
+                                           boolean?)
+                  (preferences:set-default 'files-viewer:filter-types
+                                           '()
+                                           list?)
+                  (preferences:set-default 'files-viewer:percentages
+                                           (list #e0.15 #e0.85)
+                                           list?)
+                  (preferences:set-default 'files-viewer:auto-refresh
+                                           #f
+                                           boolean?)
                   (preferences:set-default 'files-viewer:cmd
                                            (match (system-type 'os)
                                              ['windows "start /d ~a cmd"]
@@ -188,13 +206,13 @@
                                  (new git-commit%
                                       [parent this]
                                       [content-callback (λ (c)
-                                 (define t (new terminal%))
-                                 (thread (thunk (send t run-commands
-                                                      (list "git add --all"
-                                                       (format "git commit -m ~s" c)
-                                                            "git push origin master")
-                                                      p
-                                                      ))))]))]
+                                                          (define t (new terminal%))
+                                                          (thread (thunk (send t run-commands
+                                                                               (list "git add --all"
+                                                                                     (format "git commit -m ~s" c)
+                                                                                     "git push origin master")
+                                                                               p
+                                                                               ))))]))]
                                ))
         
           
