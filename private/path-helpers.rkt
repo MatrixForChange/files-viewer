@@ -60,15 +60,14 @@
                        (build-path path name)))
   (if (file-exists? new-name)
       (message-box "Error" "File exists, can't create!")
-      (let ([p (open-output-file new-name)])
-        (display content p)
-        (close-output-port p))))
+      (with-output-to-file new-name
+        (thunk (display content)))))
 
 (define (new-file-dialog dparent current-path)
   (define file-dialog%
     (class dialog%
       (super-new
-       [label "Create New File"]
+       [label "Create a new file"]
        [width 430]
        [height 200]
        [parent dparent])
@@ -76,12 +75,14 @@
                         [parent this]))
       (send name focus)
 
-      (define file (new button% [label "File (Enter)"]
-                        [parent this][stretchable-width #t]
+      (define file (new button%
+                        [label "File (Enter)"]
+                        [parent this]
+                        [stretchable-width #t]
                         [callback (λ (c e)
                                     (cond
                                       [(string=? (send name get-value) "")
-                                       (message-box "Error" "File name is empty, can't create file.")]
+                                       (message-box "Error" "File name is empty, can't create a file.")]
                                       [(string=? (send name get-value) "tool.rkt")
                                        (create-new-file current-path
                                                         "tool.rkt"
@@ -96,25 +97,31 @@
                                     (send this show #f)
                                     )]))
 
-      (define dir (new button% [label "Directory"]
-                       [parent this][stretchable-width #t]
+      (define dir (new button%
+                       [label "Directory"]
+                       [parent this]
+                       [stretchable-width #t]
                        [callback (λ (c e)
                                    (with-handlers
                                        ([exn:fail? (λ (e)
                                                      (message-box "Error"
-                                                                  "Fail to create directory here, or your directory name is empty."))])
+                                                                  "Fail to create a directory here, or your directory name is empty."))])
                                      (make-directory (build-path current-path (send name get-value))))
                                    (send this show #f))]))
-      (define gitignore (new button% [label "Racket GitIgnore"]
-                             [parent this][stretchable-width #t]
+      (define gitignore (new button%
+                             [label "Racket GitIgnore"]
+                             [parent this]
+                             [stretchable-width #t]
                              [callback (λ (c e)
                                          (create-new-file current-path
                                                           ".gitignore"
                                                           CONTENT-GITIGNORE)
                                          (send this show #f))]))
 
-      (define info-file (new button% [label "info.rkt"]
-                             [parent this][stretchable-width #t]
+      (define info-file (new button%
+                             [label "info.rkt"]
+                             [parent this]
+                             [stretchable-width #t]
                              [callback (λ (c e)
                                          (define info-ins (new instruction-dialog% [parent dparent]
                                                                [content-callback (λ (c)
