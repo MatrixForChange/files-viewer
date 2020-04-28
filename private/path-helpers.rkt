@@ -1,6 +1,7 @@
 #lang racket
 (provide path-/string new-file-dialog delete-file-and-directory
-         process/safe binary-file?)
+         process/safe binary-file?
+         paths-common-prefix)
 (require rackunit racket/gui syntax/parse/define (for-syntax racket/syntax)
          "contents.rkt" "info-instructor.rkt"
          )
@@ -39,6 +40,19 @@
           (delete-file-and-directory/recur i))
         (delete-directory path))
       ))
+
+;; paths-common-prefix : [Listof Path] -> Path | #f
+;; Produces the common ancestor directory of the given paths,
+;; or #f if the list is empty.
+(define (paths-common-prefix ps)
+  (match ps
+    ['() #f]
+    [(list p) p]
+    [(cons p0 rst)
+     (path->directory-path
+      (apply build-path
+             (for/fold ([common (explode-path p0)]) ([p (in-list rst)])
+               (take-common-prefix common (explode-path p)))))]))
 
 (define (create-new-file path name content)
   (define new-name (if (file-exists? path)
