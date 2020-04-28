@@ -19,6 +19,24 @@
                   (preferences:set-default 'files-viewer:binary-file-open
                                            #f
                                            boolean?)
+                  (preferences:set-default 'files-viewer:is-show
+                                           #t
+                                           boolean?)
+                  (preferences:set-default 'files-viewer:filter-types3
+                                           #t
+                                           boolean?)
+                  (preferences:set-default 'files-viewer:filter-types2
+                                           #f
+                                           boolean?)
+                  (preferences:set-default 'files-viewer:filter-types
+                                           '()
+                                           list?)
+                  (preferences:set-default 'files-viewer:percentages
+                                           (list #e0.15 #e0.85)
+                                           list?)
+                  (preferences:set-default 'files-viewer:auto-refresh
+                                           #f
+                                           boolean?)
                   (preferences:set-default 'files-viewer:cmd
                                            (match (system-type 'os)
                                              ['windows "start /d ~a cmd"]
@@ -35,8 +53,8 @@
     (mixin (drracket:unit:frame<%> (class->interface drracket:unit:frame%)) ()
       
       (define main-directory (preferences:get 'files-viewer:directory))
-      (define is-show (get-preference 'files-viewer:is-show))
-      (define auto-refresh? (get-preference 'files-viewer:auto-refresh))
+      (define is-show (preferences:get 'files-viewer:is-show))
+      (define auto-refresh? (preferences:get 'files-viewer:auto-refresh))
       
       (define fschange (new fschange%))
       (define fschange-timer
@@ -89,18 +107,18 @@
         (set! *show/hide-plugin (new menu-item%
                                      [label (if is-show "Hide the File Manager" "Show the File Manager")]
                                      [callback (lambda (c e) (define is-show
-                                                               (get-preference 'files-viewer:is-show))
+                                                               (preferences:get 'files-viewer:is-show))
                                                  (if is-show
                                                      (let () (send area change-children
                                                                    (λ (x)
                                                                      (filter
                                                                       (λ (x) (not (eq? real-area x))) x)))
-                                                       (put-preferences '(files-viewer:is-show) '(#f))
+                                                       (preferences:set 'files-viewer:is-show #f)
                                                        (send c set-label "Show the File Manager"))
                                                      (let ()
                                                        (send area change-children
                                                              (lambda (x) (cons real-area x)))
-                                                       (put-preferences '(files-viewer:is-show) '(#t))
+                                                       (preferences:set 'files-viewer:is-show #t)
                                                        (send c set-label "Hide the File Manager")))
                                                  )]
                                      [parent (get-show-menu)]
@@ -165,7 +183,7 @@
                                [auto-refresh-callback
                                 (λ (v)
                                   (set! auto-refresh? v)
-                                  (put-preferences '(files-viewer:auto-refresh) (list v))
+                                  (preferences:set 'files-viewer:auto-refresh v)
                                   (if v
                                       (update-files!)
                                       (send fschange change-dirs '())))]
@@ -188,13 +206,13 @@
                                  (new git-commit%
                                       [parent this]
                                       [content-callback (λ (c)
-                                 (define t (new terminal%))
-                                 (thread (thunk (send t run-commands
-                                                      (list "git add --all"
-                                                       (format "git commit -m ~s" c)
-                                                            "git push origin master")
-                                                      p
-                                                      ))))]))]
+                                                          (define t (new terminal%))
+                                                          (thread (thunk (send t run-commands
+                                                                               (list "git add --all"
+                                                                                     (format "git commit -m ~s" c)
+                                                                                     "git push origin master")
+                                                                               p
+                                                                               ))))]))]
                                ))
         
           
