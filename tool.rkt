@@ -173,6 +173,13 @@
                                 (thunk 
                                  (define d (send (send this get-current-tab) get-directory))
                                  (change-to-directory d))]
+                               [change-to-the-common-directory-callback
+                                (thunk
+                                 (define d
+                                   (paths-common-prefix
+                                    (for/list ([t (in-list (send this get-tabs))])
+                                      (send t get-directory))))
+                                 (when d (change-to-directory d)))]
                                [git-pull-callback
                                 (thunk
                                  (define item (send *files get-selected))
