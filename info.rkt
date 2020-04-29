@@ -12,5 +12,4 @@
 (define scribblings '(("scribblings/files-viewer.scrbl" () (tool) "files-viewer")))
 
 (define drracket-tools (list (list "tool.rkt")))
-(define pkg-desc "file manager for DrRacket")
-
+(define pkg-desc "File manager for DrRacket")

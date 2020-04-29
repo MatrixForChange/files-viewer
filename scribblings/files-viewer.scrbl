@@ -23,9 +23,9 @@ Files-viewer is a file manager plugin for DrRacket.
 
 @section{Installation}
 
-To install, either look for @tt{files-manager} in the DrRacket menu @italic{File>Package Manager},
+To install, either look for @tt{files-viewer} in the DrRacket menu @italic{File > Package Manager},
 or run the raco command:
-@commandline{raco pkg install files-manager}
+@commandline{raco pkg install files-viewer}
 
 You need to restart DrRacket. Now you should have a new item @italic{Show the File Manager} in the @italic{View} menu.
 
@@ -37,5 +37,4 @@ To edit a file, double click the item.
 
 To call the popup menu, right click the file manager.
 
-To show or hide the file manager, View -> Show/Hide the File Manager.
-
+To show or hide the file manager, @italic{View > Show/Hide the File Manager}.
