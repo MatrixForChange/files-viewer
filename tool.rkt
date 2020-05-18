@@ -39,8 +39,10 @@
                                            boolean?)
                   (preferences:set-default 'files-viewer:cmd
                                            (match (system-type 'os)
-                                             ['windows "start /d ~a cmd"]
-                                             ['macosx "open -a /Applications/Utilities/Terminal.app ~a"]
+                                             ['windows "start /d \"~a\" cmd"]
+                                             ['macosx (if (directory-exists? "/System/Applications/Utilities/Terminal.app")
+                                                          "open -a /System/Applications/Utilities/Terminal.app '~a'"
+                                                          "open -a /Applications/Utilities/Terminal.app '~a'")]
                                              [_ ""])
                                            string?)
                   (preferences:set-default 'files-viewer:workspaces
