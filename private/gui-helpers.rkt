@@ -64,10 +64,11 @@
 (define compound-mixin
   (mixin (hierarchical-list-compound-item<%>)
     ((interface () set-text get-text))
-    (inherit get-editor)
+    (inherit get-editor delete-item get-items)
     (super-new)
-    (define task void)
-    (define ran #f)
+
+    (field [hierlist #f])
+    
     (define/public (set-text str)
       (define t (get-editor))
       (send t erase)
@@ -77,18 +78,28 @@
     (define/public (get-text)
       (define t (get-editor))
       (send t get-text))
-    (define/public (set-task thunk)
-      (set! task thunk))
 
-    (define/public (run-task)
-      (unless ran
-        (task)
-        (set! ran #t)))
+    (define/public (on-opened)
+      (define t (get-editor))
+      (when hierlist
+        (send t begin-edit-sequence)
+        (send hierlist update-directory! this (send this user-data)
+              (or (preferences:get 'files-viewer:filter-types) '()))
+        (send t end-edit-sequence)
+        (send hierlist refresh)))
+
+    (define/public (on-closed)
+      (define t (get-editor))
+      (send t begin-edit-sequence)
+      (for-each (λ (x) (delete-item x)) (get-items))
+      (send t end-edit-sequence)
+      (when hierlist
+        (send hierlist refresh)))
+    
     (define/public (compound?)
       #t
       )
     ))
-
 
 (define directory-list%
   (class hierarchical-list%
@@ -137,7 +148,7 @@
     (define/public (set-dir! dir)
       (set! the-dir dir))
 
-    (define (update-directory! parent dir filter-types)
+    (define/public-final (update-directory! parent dir filter-types)
       (let/ec exit
         (define files
           (with-handlers ([exn:fail?
@@ -182,7 +193,7 @@
                                                           (path->string i))))]
                   [else (send item set-text (path->string i) (cons 0 0))])
             (when is-directory
-              (send item set-task (thunk (update-directory! item (build-path dir i) filter-types)))
+              (set-field! hierlist item this)
               (when (set-member? opened (send item user-data))
                 (send item open))
               )))
@@ -212,12 +223,13 @@
       
       )
     (define/override (on-item-opened item)
-      (send item run-task)
+      (send item on-opened)
       (set-add! opened (send item user-data))
       (opened-change-callback)
       (void)
       )
     (define/override (on-item-closed item)
+      (send item on-closed)
       (set-remove! opened (send item user-data))
       (opened-change-callback)
       (void)
