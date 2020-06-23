@@ -118,14 +118,6 @@
         [else (void)])
       (super on-char ev))
                            
-      
-    
-    (define (sort!)
-      (send this sort (lambda (x y)
-                        (define p1 (is-a? x hierarchical-list-compound-item<%>))
-                        (define p2 (is-a? y hierarchical-list-compound-item<%>))
-                        (cond [(xor p1 p2) p1]
-                              [else (string<? (send x get-text) (send y get-text))]))))
     (define/public (update-files!)
       (define e (get-editor))
       (define ad (send e get-admin))
@@ -137,7 +129,6 @@
       (for-each (λ (x) (delete-item x)) (get-items))
       (when (and the-dir (directory-exists? the-dir))
         (update-directory! this the-dir (if filter-types filter-types '())))
-      (sort!)
       (send e end-edit-sequence)
       (send ad scroll-to (unbox x) (unbox y) (unbox w) (unbox h) #f)
       (resume-flush)
@@ -162,8 +153,12 @@
                            (λ (e)
                              #f)])
             (regexp (format "(?i:~a)" (send (get-editor) get-word-filter)))))
-        (for ([i files])
-          (define is-directory (directory-exists? (build-path dir i)))
+
+        (define-values (dirs regular-files)
+          (partition (λ (p) (directory-exists? (build-path dir p)))
+                     (sort files path<?)))
+
+        (define ((add-item! is-directory) i)
           (when (and (or is-directory
                          (not (xor (preferences:get 'files-viewer:filter-types2)
                                    (ormap (λ (x) (path-has-extension? i x)) filter-types))))
@@ -180,17 +175,19 @@
             (send item user-data (build-path dir i))
             (cond [is-directory (send item set-text (path->string i))]
                   [(and compiled-regexp
-                           (not cute-syntax-enabled?))
-                  (send item set-text (path->string i) (car
-                                                        (regexp-match-positions
-                                                         compiled-regexp
-                                                         (path->string i))))]
+                        (not cute-syntax-enabled?))
+                   (send item set-text (path->string i) (car
+                                                         (regexp-match-positions
+                                                          compiled-regexp
+                                                          (path->string i))))]
                   [else (send item set-text (path->string i) (cons 0 0))])
             (when is-directory
               (send item set-task (thunk (update-directory! item (build-path dir i) filter-types)))
               (when (set-member? opened (send item user-data))
                 (send item open))
-              )))))
+              )))
+        (for-each (add-item! #t) dirs)
+        (for-each (add-item! #f) regular-files)))
 
     (define/override (on-double-select i)
       (when i
@@ -218,13 +215,11 @@
       (send item run-task)
       (set-add! opened (send item user-data))
       (opened-change-callback)
-      (sort!)
       (void)
       )
     (define/override (on-item-closed item)
       (set-remove! opened (send item user-data))
       (opened-change-callback)
-      (sort!)
       (void)
       )
 
