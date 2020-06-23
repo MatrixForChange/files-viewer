@@ -3,7 +3,7 @@
 (provide/contract
  [fschange%
   (class/c [shutdown (->m void?)]
-           [change-dirs (->m (listof path-string?) void?)]
+           [change-dirs (->m (set/c path-string? #:kind 'dont-care) void?)]
            [need-update?! (->m boolean?)])])
 
 (define fschange%
@@ -38,24 +38,21 @@
                [else h])))
          
          (let loop ([dirs+evts (diff (hash) dirs)])
-           (define evts (for/list ([(k v) (in-hash dirs+evts)]) v))
-           (define evt (apply sync sema evts))
-           (cond
-             [(eq? evt sema) (loop (diff dirs+evts dirs))]
-             [else
-              (set-box! changed #t)
-              (define changed-dir
-                (for/first ([(k v) (in-hash dirs+evts)]
-                            #:when (eq? v evt))
-                  (filesystem-change-evt-cancel evt)
-                  k))
-              (cond
-                [(with-handlers ([exn:fail:filesystem? (λ (e) #f)])
-                  (filesystem-change-evt changed-dir (λ () #f)))
-                 =>
-                 (λ (evt) (loop (hash-set dirs+evts changed-dir evt)))]
-                [else
-                 (loop (hash-remove dirs+evts changed-dir))])])))))
+           (apply
+            sync
+            (handle-evt sema (λ (_) (loop (diff dirs+evts dirs))))
+            (for/list ([(changed-dir v) (in-hash dirs+evts)])
+              (handle-evt
+               v
+               (λ (_)
+                 (set-box! changed #t)
+                 (cond
+                   [(with-handlers ([exn:fail:filesystem? (λ (e) #f)])
+                      (filesystem-change-evt changed-dir (λ () #f)))
+                    =>
+                    (λ (evt) (loop (hash-set dirs+evts changed-dir evt)))]
+                   [else
+                    (loop (hash-remove dirs+evts changed-dir))])))))))))
 
     (define/public (need-update?!)
       (box-cas! changed #t #f))
@@ -66,7 +63,7 @@
 
     (define/public (change-dirs new-dirs)
       ;(log-info "~a" new-dirs)
-      (set! dirs (list->set new-dirs))
+      (set! dirs new-dirs)
       (semaphore-post sema))
     
     (super-new)))

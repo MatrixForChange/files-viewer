@@ -188,7 +188,7 @@
                                   (preferences:set 'files-viewer:auto-refresh v)
                                   (if v
                                       (update-files!)
-                                      (send fschange change-dirs '())))]
+                                      (send fschange change-dirs (set))))]
                                [change-to-the-directory-of-current-file-callback
                                 (thunk 
                                  (define d (send (send this get-current-tab) get-directory))

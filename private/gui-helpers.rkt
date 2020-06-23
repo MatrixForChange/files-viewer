@@ -122,8 +122,8 @@
     
     (define (sort!)
       (send this sort (lambda (x y)
-                        (define p1 (directory-exists? (send x user-data)))
-                        (define p2 (directory-exists? (send y user-data)))
+                        (define p1 (is-a? x hierarchical-list-compound-item<%>))
+                        (define p2 (is-a? y hierarchical-list-compound-item<%>))
                         (cond [(xor p1 p2) p1]
                               [else (string<? (send x get-text) (send y get-text))]))))
     (define/public (update-files!)
@@ -137,8 +137,8 @@
       (for-each (λ (x) (delete-item x)) (get-items))
       (when (and the-dir (directory-exists? the-dir))
         (update-directory! this the-dir (if filter-types filter-types '())))
-      (send e end-edit-sequence)
       (sort!)
+      (send e end-edit-sequence)
       (send ad scroll-to (unbox x) (unbox y) (unbox w) (unbox h) #f)
       (resume-flush)
       (refresh))
@@ -239,7 +239,7 @@
              (set-add! opened-inside (send item user-data))
              (for-each recur (send item get-items))))
          (for-each recur (get-items))
-         (set->list opened-inside)]))
+         opened-inside]))
     ))
 
 
