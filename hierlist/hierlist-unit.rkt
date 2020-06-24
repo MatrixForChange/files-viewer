@@ -246,7 +246,9 @@
 
     (define hierarchical-list-compound-item<%>
       (interface (hierarchical-list-item<%>)
-        new-item 
+        new-item-before
+        new-item
+        new-list-before
         new-list
         delete-item
         get-items
@@ -276,12 +278,22 @@
          [is-open?
           (lambda ()
             (send snip is-open?))]
+         [new-item-before
+          (lambda x
+            (begin0
+              (send (send snip get-content-buffer) new-item-before . x)
+              (send snip not-empty-anymore)))]
          [new-item 
           (lambda x
             (begin0
               (send (send snip get-content-buffer) new-item . x)
               (send snip not-empty-anymore)))]
          [set-no-sublists (lambda x (send (send snip get-content-buffer) set-no-sublists . x))]
+         [new-list-before
+          (lambda x
+            (begin0
+              (send (send snip get-content-buffer) new-list-before . x)
+              (send snip not-empty-anymore)))]
          [new-list 
           (lambda x
             (begin0 
@@ -377,7 +389,8 @@
         (init tp tp-select dpth parent-snp)
         (inherit hide-caret erase
                  last-position insert delete line-start-position line-end-position
-                 begin-edit-sequence end-edit-sequence get-style-list)
+                 begin-edit-sequence end-edit-sequence get-style-list
+                 get-snip-position)
         (define top tp)
         (define top-select tp-select)
         (define depth dpth)
@@ -403,6 +416,28 @@
               (insert s (last-position))
               (end-edit-sequence)
               (set! new-children (cons s new-children))
+              (send s get-item)))]
+         
+         [insert-item-before
+          (lambda (mixin snip% before-it)
+            (let ([s (make-object snip% this top top-select (add1 depth) mixin)])
+              (send s use-style-background transparent?)
+              (begin-edit-sequence)
+              (append-children!)
+              (define before-snip
+                (findf (λ (s) (eq? before-it (send s get-item)))
+                       children))
+              (define pos (get-snip-position before-snip))
+              (insert #\newline pos)
+              (insert s pos)
+              (set! children
+                    (let loop ([children children] [accs '()])
+                      (cond
+                        [(eq? (car children) before-snip)
+                         (append (reverse accs) (cons s children))]
+                        [else
+                         (loop (cdr children) (cons (car children) accs))])))
+              (end-edit-sequence)
               (send s get-item)))])
         (public*
          [set-transparent (λ (t?) (set! transparent? (and t? #t)))]
@@ -423,6 +458,14 @@
              (when no-sublists?
                (error 'new-list "this list has been designated with `set-no-sublists' as having no sublists"))
              (insert-item mixin hierarchical-list-snip% #f)])]
+         [new-item-before
+          (lambda (mixin before-it)
+            (insert-item-before mixin hierarchical-item-snip% before-it))]
+         [new-list-before
+          (lambda (mixin before-it)
+            (when no-sublists?
+              (error 'new-list "this list has been designated with `set-no-sublists' as having no sublists"))
+            (insert-item-before mixin hierarchical-list-snip% before-it))]
          [set-no-sublists
           (lambda (no?)
             (append-children!)
@@ -701,8 +744,10 @@
          [on-double-select (lambda (i) (void))]
          [on-select (lambda (i) (void))]
          [on-click (lambda (i) (void))]
+         [new-item-before (lambda x (send top-buffer new-item-before . x))]
          [new-item (lambda x (send top-buffer new-item . x))]
          [set-no-sublists (lambda x (send top-buffer set-no-sublists . x))]
+         [new-list-before (lambda x (send top-buffer new-list-before . x))]
          [new-list (lambda x (send top-buffer new-list . x))]
          [delete-item (lambda (i) (send top-buffer delete-item i))]
          [sort (lambda (less-than? [recur? #t]) (send top-buffer sort less-than? recur?))]

@@ -62,8 +62,10 @@
       (define fschange-timer
         (new timer%
              [notify-callback
-              (λ () (when (send fschange need-update?!)
-                      (update-files!)))]
+              (λ ()
+                (define changed-paths (send fschange need-update?!))
+                (when (not (null? changed-paths))
+                  (update-files! (remove-duplicates changed-paths))))]
              [interval 1000]))
       
       
@@ -71,11 +73,16 @@
       (define *files #f)
       (define *show/hide-plugin #f)
       (define *dir-control #f)
-      (define (update-files!)
-        (when (and main-directory (directory-exists? main-directory))
-          (send *files set-dir! main-directory)
-          (send *files update-files!)
-          (update-fschange)))
+      (define/private update-files!
+        (case-lambda
+          [()
+           (when (and main-directory (directory-exists? main-directory))
+             (send *files set-dir! main-directory)
+             (send *files update-files!)
+             (update-fschange))]
+          [(changed-paths)
+           (send *files update-files! changed-paths)
+           (update-fschange)]))
       
       (define (change-to-directory dir)
         (let/ec exit

@@ -4,7 +4,7 @@
  [fschange%
   (class/c [shutdown (->m void?)]
            [change-dirs (->m (set/c path-string? #:kind 'dont-care) void?)]
-           [need-update?! (->m boolean?)])])
+           [need-update?! (->m (listof path-string?))])])
 
 (define fschange%
   (class object%
@@ -13,7 +13,7 @@
     (define sema (make-semaphore 0))
 
     (define cust (make-custodian))
-    (define changed (box #f))
+    (define changed (box '()))
 
     (parameterize ([current-custodian cust])
       (thread
@@ -45,7 +45,11 @@
               (handle-evt
                v
                (λ (_)
-                 (set-box! changed #t)
+                 (let loop ()
+                   (define old (unbox changed))
+                   (define neo (cons changed-dir old))
+                   (unless (box-cas! changed old neo)
+                     (loop)))
                  (cond
                    [(with-handlers ([exn:fail:filesystem? (λ (e) #f)])
                       (filesystem-change-evt changed-dir (λ () #f)))
@@ -55,7 +59,11 @@
                     (loop (hash-remove dirs+evts changed-dir))])))))))))
 
     (define/public (need-update?!)
-      (box-cas! changed #t #f))
+      (let loop ()
+        (define dirs (unbox changed))
+        (if (box-cas! changed dirs '())
+            dirs
+            (loop))))
 
     (define/public (shutdown)
       (custodian-shutdown-all cust)
