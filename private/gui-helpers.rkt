@@ -173,6 +173,7 @@
       (set! the-dir dir))
 
     (define/public-final (update-directory! parent dir filter-types [delta? #f])
+      (define (build p) (build-path dir p))
       (define files
         (with-handlers ([exn:fail? (λ (e) '())])
           (directory-list dir)))
@@ -185,7 +186,7 @@
           (regexp (format "(?i:~a)" (send (get-editor) get-word-filter)))))
 
       (define-values (dirs regular-files)
-        (partition (λ (p) (directory-exists? (build-path dir p)))
+        (partition (λ (p) (directory-exists? (build p)))
                    (sort files path<?)))
 
       (define ((add-item! is-directory) i)
@@ -203,7 +204,7 @@
             (cond
               [delta?
                (define items (send parent get-items));ordered
-               (define before-it (findf (item-<? (build-path dir i) is-directory) items))
+               (define before-it (findf (item-<? (build i) is-directory) items))
                (if before-it
                    (if is-directory
                        (send parent new-list-before compound-mixin before-it)
@@ -215,7 +216,7 @@
                (send parent new-list compound-mixin)]
               [else
                (send parent new-item simple-mixin)]))
-          (send item user-data (build-path dir i))
+          (send item user-data (build i))
           (cond [is-directory (send item set-text (path->string i))]
                 [(and compiled-regexp
                       (not cute-syntax-enabled?))
@@ -235,27 +236,33 @@
          (for-each (add-item! #t) dirs)
          (for-each (add-item! #f) regular-files)]
         [else
-         (define neo-files
-           (for/set ([p (in-list files)])
-             (build-path dir p)))
+         (define neo-files (list->set (map build regular-files)))
+         (define neo-dirs (list->set (map build dirs)))
            
          (define path+items
            (for/fold ([h (hash)])
                      ([item (in-list (send parent get-items))])
              (define p (send item user-data))
-             (cond
-               [(set-member? neo-files p)
-                (hash-set h p item)]
-               [else
-                (send parent delete-item item)
-                h])))
+             (if (send item compound?)
+                 (cond
+                   [(set-member? neo-dirs p)
+                    (hash-set h p item)]
+                   [else
+                    (send parent delete-item item)
+                    h])
+                 (cond
+                   [(set-member? neo-files p)
+                    (hash-set h p item)]
+                   [else
+                    (send parent delete-item item)
+                    h]))))
            
          (for ([d (in-list dirs)])
-           (unless (hash-has-key? path+items (build-path dir d))
+           (unless (hash-has-key? path+items (build d))
              ((add-item! #t) d)))
            
          (for ([f (in-list regular-files)])
-           (unless (hash-has-key? path+items (build-path dir f))
+           (unless (hash-has-key? path+items (build f))
              ((add-item! #f) f)))]))
 
     (define/override (on-double-select i)
