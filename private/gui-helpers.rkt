@@ -144,7 +144,7 @@
       (send ad get-view x y w h)
       
       (cond
-        [(or (not changed-paths) (member the-dir changed-paths))
+        [(not changed-paths)
          (for-each (λ (x) (delete-item x)) (get-items))
          (when (and the-dir (directory-exists? the-dir))
            (update-directory! this the-dir (or filter-types '())))]
@@ -162,7 +162,9 @@
                 (define children (send (car items) get-items))
                 (loop (cdr items) (loop children changed-items))])))
          (for ([item (in-list changed-items)])
-           (update-directory! item (send item user-data) (or filter-types '()) #t))])
+           (update-directory! item (send item user-data) (or filter-types '()) #t))
+         (when (member the-dir changed-paths)
+           (update-directory! this the-dir (or filter-types '()) #t))])
       
       (send e end-edit-sequence)
       (send ad scroll-to (unbox x) (unbox y) (unbox w) (unbox h) #f)
