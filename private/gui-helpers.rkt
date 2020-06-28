@@ -64,10 +64,11 @@
 (define compound-mixin
   (mixin (hierarchical-list-compound-item<%>)
     ((interface () set-text get-text))
-    (inherit get-editor)
+    (inherit get-editor delete-item get-items)
     (super-new)
-    (define task void)
-    (define ran #f)
+
+    (field [hierlist #f])
+    
     (define/public (set-text str)
       (define t (get-editor))
       (send t erase)
@@ -77,18 +78,33 @@
     (define/public (get-text)
       (define t (get-editor))
       (send t get-text))
-    (define/public (set-task thunk)
-      (set! task thunk))
 
-    (define/public (run-task)
-      (unless ran
-        (task)
-        (set! ran #t)))
+    (define/public (on-opened)
+      (define t (get-editor))
+      (when hierlist
+        (send t begin-edit-sequence)
+        (send hierlist update-directory! this (send this user-data)
+              (or (preferences:get 'files-viewer:filter-types) '()))
+        (send t end-edit-sequence)
+        (send hierlist refresh)))
+
+    (define/public (on-closed)
+      (define t (get-editor))
+      (send t begin-edit-sequence)
+      (for-each (λ (x) (delete-item x)) (get-items))
+      (send t end-edit-sequence)
+      (when hierlist
+        (send hierlist refresh)))
+    
     (define/public (compound?)
       #t
       )
     ))
 
+(define ((item-<? path dir?) y)
+  (define p2 (send y compound?))
+  (cond [(xor dir? p2) dir?]
+        [else (path<? path (send y user-data))]))
 
 (define directory-list%
   (class hierarchical-list%
@@ -117,16 +133,8 @@
          (update-files!)]
         [else (void)])
       (super on-char ev))
-                           
-      
     
-    (define (sort!)
-      (send this sort (lambda (x y)
-                        (define p1 (directory-exists? (send x user-data)))
-                        (define p2 (directory-exists? (send y user-data)))
-                        (cond [(xor p1 p2) p1]
-                              [else (string<? (send x get-text) (send y get-text))]))))
-    (define/public (update-files!)
+    (define/public (update-files! [changed-paths #f])
       (define e (get-editor))
       (define ad (send e get-admin))
       (define filter-types (preferences:get 'files-viewer:filter-types))
@@ -134,11 +142,31 @@
       (send e begin-edit-sequence)
       (define-values (x y w h) (values (box 0) (box 0) (box 0) (box 0)))
       (send ad get-view x y w h)
-      (for-each (λ (x) (delete-item x)) (get-items))
-      (when (and the-dir (directory-exists? the-dir))
-        (update-directory! this the-dir (if filter-types filter-types '())))
+      
+      (cond
+        [(not changed-paths)
+         (for-each (λ (x) (delete-item x)) (get-items))
+         (when (and the-dir (directory-exists? the-dir))
+           (update-directory! this the-dir (or filter-types '())))]
+        [else
+         (define changed-items
+           (let loop ([items (get-items)] [changed-items '()])
+             (cond
+               [(null? items) changed-items]
+               [(not (send (car items) compound?))
+                (loop (cdr items) changed-items)]
+               [(member (send (car items) user-data) changed-paths)
+                (define children (send (car items) get-items))
+                (loop (cdr items) (loop children (cons (car items) changed-items)))]
+               [else
+                (define children (send (car items) get-items))
+                (loop (cdr items) (loop children changed-items))])))
+         (for ([item (in-list changed-items)])
+           (update-directory! item (send item user-data) (or filter-types '()) #t))
+         (when (member the-dir changed-paths)
+           (update-directory! this the-dir (or filter-types '()) #t))])
+      
       (send e end-edit-sequence)
-      (sort!)
       (send ad scroll-to (unbox x) (unbox y) (unbox w) (unbox h) #f)
       (resume-flush)
       (refresh))
@@ -146,51 +174,98 @@
     (define/public (set-dir! dir)
       (set! the-dir dir))
 
-    (define (update-directory! parent dir filter-types)
-      (let/ec exit
-        (define files
-          (with-handlers ([exn:fail?
-                           (λ (e)
-                             (exit
-                              (message-box "Error" "Can't open the directory.")))])
-            (directory-list
-             dir)))
-        (define cute-syntax-enabled? (string-prefix? (send (get-editor) get-word-filter)
-                                                     "`"))
-        (define compiled-regexp
-          (with-handlers ([exn:fail?
-                           (λ (e)
-                             #f)])
-            (regexp (format "(?i:~a)" (send (get-editor) get-word-filter)))))
-        (for ([i files])
-          (define is-directory (directory-exists? (build-path dir i)))
-          (when (and (or is-directory
-                         (not (xor (preferences:get 'files-viewer:filter-types2)
-                                   (ormap (λ (x) (path-has-extension? i x)) filter-types))))
-                     (not (and (preferences:get 'files-viewer:filter-types3) (string-prefix? (path->string i) ".")))
-                     (or is-directory
-                         cute-syntax-enabled?
-                         (not compiled-regexp)
-                         (regexp-match compiled-regexp
-                                       (path->string i)))
-                     )
-            (define item (if is-directory
-                             (send parent new-list (compose1 compound-mixin identity))
-                             (send parent new-item (compose1 simple-mixin identity))))
-            (send item user-data (build-path dir i))
-            (cond [is-directory (send item set-text (path->string i))]
-                  [(and compiled-regexp
-                           (not cute-syntax-enabled?))
-                  (send item set-text (path->string i) (car
-                                                        (regexp-match-positions
-                                                         compiled-regexp
-                                                         (path->string i))))]
-                  [else (send item set-text (path->string i) (cons 0 0))])
-            (when is-directory
-              (send item set-task (thunk (update-directory! item (build-path dir i) filter-types)))
-              (when (set-member? opened (send item user-data))
-                (send item open))
-              )))))
+    (define/public-final (update-directory! parent dir filter-types [delta? #f])
+      (define (build p) (build-path dir p))
+      (define files
+        (with-handlers ([exn:fail? (λ (e) '())])
+          (directory-list dir)))
+      (define cute-syntax-enabled? (string-prefix? (send (get-editor) get-word-filter)
+                                                   "`"))
+      (define compiled-regexp
+        (with-handlers ([exn:fail?
+                         (λ (e)
+                           #f)])
+          (regexp (format "(?i:~a)" (send (get-editor) get-word-filter)))))
+
+      (define-values (dirs regular-files)
+        (partition (λ (p) (directory-exists? (build p)))
+                   (sort files path<?)))
+
+      (define ((add-item! is-directory) i)
+        (when (and (or is-directory
+                       (not (xor (preferences:get 'files-viewer:filter-types2)
+                                 (ormap (λ (x) (path-has-extension? i x)) filter-types))))
+                   (not (and (preferences:get 'files-viewer:filter-types3) (string-prefix? (path->string i) ".")))
+                   (or is-directory
+                       cute-syntax-enabled?
+                       (not compiled-regexp)
+                       (regexp-match compiled-regexp
+                                     (path->string i)))
+                   )
+          (define item
+            (cond
+              [delta?
+               (define items (send parent get-items));ordered
+               (define before-it (findf (item-<? (build i) is-directory) items))
+               (if before-it
+                   (if is-directory
+                       (send parent new-list-before compound-mixin before-it)
+                       (send parent new-item-before simple-mixin before-it))
+                   (if is-directory
+                       (send parent new-list compound-mixin)
+                       (send parent new-item simple-mixin)))]
+              [is-directory
+               (send parent new-list compound-mixin)]
+              [else
+               (send parent new-item simple-mixin)]))
+          (send item user-data (build i))
+          (cond [is-directory (send item set-text (path->string i))]
+                [(and compiled-regexp
+                      (not cute-syntax-enabled?))
+                 (send item set-text (path->string i) (car
+                                                       (regexp-match-positions
+                                                        compiled-regexp
+                                                        (path->string i))))]
+                [else (send item set-text (path->string i) (cons 0 0))])
+          (when is-directory
+            (set-field! hierlist item this)
+            (when (set-member? opened (send item user-data))
+              (send item open))
+            )))
+
+      (cond
+        [(not delta?)
+         (for-each (add-item! #t) dirs)
+         (for-each (add-item! #f) regular-files)]
+        [else
+         (define neo-files (list->set (map build regular-files)))
+         (define neo-dirs (list->set (map build dirs)))
+           
+         (define path+items
+           (for/fold ([h (hash)])
+                     ([item (in-list (send parent get-items))])
+             (define p (send item user-data))
+             (if (send item compound?)
+                 (cond
+                   [(set-member? neo-dirs p)
+                    (hash-set h p item)]
+                   [else
+                    (send parent delete-item item)
+                    h])
+                 (cond
+                   [(set-member? neo-files p)
+                    (hash-set h p item)]
+                   [else
+                    (send parent delete-item item)
+                    h]))))
+           
+         (for ([d (in-list dirs)])
+           (unless (hash-has-key? path+items (build d))
+             ((add-item! #t) d)))
+           
+         (for ([f (in-list regular-files)])
+           (unless (hash-has-key? path+items (build f))
+             ((add-item! #f) f)))]))
 
     (define/override (on-double-select i)
       (when i
@@ -215,16 +290,15 @@
       
       )
     (define/override (on-item-opened item)
-      (send item run-task)
+      (send item on-opened)
       (set-add! opened (send item user-data))
       (opened-change-callback)
-      (sort!)
       (void)
       )
     (define/override (on-item-closed item)
+      (send item on-closed)
       (set-remove! opened (send item user-data))
       (opened-change-callback)
-      (sort!)
       (void)
       )
 
@@ -239,7 +313,7 @@
              (set-add! opened-inside (send item user-data))
              (for-each recur (send item get-items))))
          (for-each recur (get-items))
-         (set->list opened-inside)]))
+         opened-inside]))
     ))
 
 
