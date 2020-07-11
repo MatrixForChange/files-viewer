@@ -16,16 +16,19 @@
       (define picture-cache #f)
       (define/public (set-word-filter something)
         (set! word-filter something)
-        (set! picture-cache (pict->bitmap (inset (frame
-                                                  (inset (blue (text word-filter 'system 13)) 3)
-                                                  #:line-width 1) 1)
-                                          #:make-bitmap
-                                          (λ (w h)
-                                            (make-object bitmap% w h #f #f 2.0))))
+        (set! picture-cache
+              (if (string=? something "") #f
+                  (pict->bitmap (inset (frame
+                                        (inset (blue (text word-filter 'system 13)) 3)
+                                        #:line-width 1) 1)
+                                #:make-bitmap
+                                (λ (w h)
+                                  (make-object bitmap% w h #f #f 2.0)))))
         (invalidate-bitmap-cache 0.0 0.0 'display-end 'display-end))
       (define/override (after-scroll-to)
-        (invalidate-bitmap-cache 0.0 0.0 'display-end 'display-end)
-        (super after-scroll-to))
+        (super after-scroll-to)
+        (when picture-cache
+          (invalidate-bitmap-cache 0.0 0.0 'display-end 'display-end)))
       (define/public (get-word-filter) word-filter)
       (define/override (on-paint before? dc left top right bottom dx dy draw-caret)
         (when (and (not (string=? "" word-filter))
