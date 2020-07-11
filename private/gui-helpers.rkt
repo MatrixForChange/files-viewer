@@ -133,13 +133,18 @@
          (update-files!)]
         [else (void)])
       (super on-char ev))
+
+    (define/private (may-begin-edit-sequence)
+      (define e (get-editor))
+      (unless (send e in-edit-sequence?)
+        (send e begin-edit-sequence)))
     
     (define/public (update-files! [changed-paths #f])
       (define e (get-editor))
       (define ad (send e get-admin))
       (define filter-types (preferences:get 'files-viewer:filter-types))
-      (suspend-flush)
-      (send e begin-edit-sequence)
+      (when (or (not changed-paths) (send e in-edit-sequence?))
+        (send e begin-edit-sequence))
       (define-values (x y w h) (values (box 0) (box 0) (box 0) (box 0)))
       (send ad get-view x y w h)
       
@@ -165,11 +170,9 @@
            (update-directory! item (send item user-data) (or filter-types '()) #t))
          (when (member the-dir changed-paths)
            (update-directory! this the-dir (or filter-types '()) #t))])
-      
-      (send e end-edit-sequence)
-      (send ad scroll-to (unbox x) (unbox y) (unbox w) (unbox h) #f)
-      (resume-flush)
-      (refresh))
+      (when (send e in-edit-sequence?)
+        (send e end-edit-sequence))
+      (send ad scroll-to (unbox x) (unbox y) (unbox w) (unbox h) #t))
 
     (define/public (set-dir! dir)
       (set! the-dir dir))
@@ -250,21 +253,25 @@
                    [(set-member? neo-dirs p)
                     (hash-set h p item)]
                    [else
+                    (may-begin-edit-sequence)
                     (send parent delete-item item)
                     h])
                  (cond
                    [(set-member? neo-files p)
                     (hash-set h p item)]
                    [else
+                    (may-begin-edit-sequence)
                     (send parent delete-item item)
                     h]))))
            
          (for ([d (in-list dirs)])
            (unless (hash-has-key? path+items (build d))
+             (may-begin-edit-sequence)
              ((add-item! #t) d)))
            
          (for ([f (in-list regular-files)])
            (unless (hash-has-key? path+items (build f))
+             (may-begin-edit-sequence)
              ((add-item! #f) f)))]))
 
     (define/override (on-double-select i)
