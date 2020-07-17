@@ -123,11 +123,10 @@
       (define c (send ev get-key-code))
       (define old (send (get-editor) get-word-filter))
       (match c
-        [#\backspace (send (get-editor) set-word-filter
-                           (if (string=? old "")
-                               ""
-                               (substring old 0 (- (string-length old) 1))))
-                     (update-files!)]
+        [#\backspace (unless (string=? old "")
+                       (send (get-editor) set-word-filter
+                             (substring old 0 (- (string-length old) 1)))
+                       (update-files!))]
         [(or (? (conjoin char? char-graphic?)) #\space)
          (send (get-editor) set-word-filter (string-append old (string c)))
          (update-files!)]

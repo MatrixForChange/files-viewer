@@ -10,11 +10,13 @@
   (define display-text%
     (class text%
       (super-new)
-      (inherit invalidate-bitmap-cache get-padding
-               get-canvas)
+      (inherit invalidate-bitmap-cache
+               get-canvas dc-location-to-editor-location)
       (define word-filter "")
       (define picture-cache #f)
+      (define invalidated-extent #f)
       (define/public (set-word-filter something)
+        (define old (compute-extent-editor))
         (set! word-filter something)
         (set! picture-cache
               (if (string=? something "") #f
@@ -24,24 +26,59 @@
                                 #:make-bitmap
                                 (λ (w h)
                                   (make-object bitmap% w h #f #f 2.0)))))
-        (invalidate-bitmap-cache 0.0 0.0 'display-end 'display-end))
+        (set! invalidated-extent (merge-extent old (compute-extent-editor)))
+        (invalidate-extent))
+
+      (define/private (merge-extent a b)
+        (if (and a b)
+            (map (λ (x y z) (x y z)) (list min min max max) a b)
+            (or a b)))
+      
+      (define/private (invalidate-extent)
+        (when invalidated-extent
+          (match-define (list x0 y0 x1 y1) invalidated-extent)
+          (invalidate-bitmap-cache x0 y0 (- x1 x0) (- y1 y0))
+          (set! invalidated-extent #f)))
+      
+      (define/private (compute-extent-editor)
+        (cond
+          [picture-cache
+           (define c (get-canvas))
+           (define v (send c vertical-inset))
+           (define h (send c horizontal-inset))
+           (define-values (dx dy) (dc-location-to-editor-location h v))
+           (list dx dy
+                 (+ dx (send picture-cache get-width))
+                 (+ dy (send picture-cache get-height)))]
+          [else #f]))
+
+      (define/override (on-scroll-to)
+        (super on-scroll-to)
+        (when picture-cache
+          (set! invalidated-extent (compute-extent-editor))))
+      
       (define/override (after-scroll-to)
         (super after-scroll-to)
         (when picture-cache
-          (invalidate-bitmap-cache 0.0 0.0 'display-end 'display-end)))
+          (invalidate-extent)
+          (set! invalidated-extent (compute-extent-editor))
+          (invalidate-extent)))
+      
       (define/public (get-word-filter) word-filter)
+
+      
       (define/override (on-paint before? dc left top right bottom dx dy draw-caret)
+        (super on-paint before? dc left top right bottom dx dy draw-caret)
         (when (and (not (string=? "" word-filter))
                    (not before?) picture-cache)
-          (define h-inset (send (get-canvas) horizontal-inset))
-          (define v-inset (send (get-canvas) vertical-inset))
-          (send dc draw-bitmap-section
-                picture-cache
-                (+ dx left) (+ dy top)
-                (+ dx left (- h-inset))
-                (+ dy top (- v-inset))
-                (- right left)
-                (- bottom top)))
+          (match-define (list x0 y0 x1 y1) (compute-extent-editor))
+          (when (and (or (<= left x0 right) (<= left x1 right))
+                     (or (<= top y0 bottom) (<= top y1 bottom)))
+            (send dc draw-bitmap-section picture-cache
+                  (+ dx (max left x0)) (+ dy (max top y0))
+                  (max 0 (- left x0)) (max 0 (- top y0))
+                  (- (min x1 right) (max x0 left))
+                  (- (min y1 bottom) (max y0 top)))))
         )
       ))
   (define (fit path)
@@ -733,7 +770,7 @@
     (define hierarchical-list%
       (class editor-canvas%
         (init parent [style '(no-hscroll)])
-        (inherit min-width min-height allow-tab-exit refresh)
+        (inherit min-width min-height allow-tab-exit set-scroll-via-copy)
         (rename-super [super-on-char on-char]
                       [super-on-focus on-focus])
         (public*
@@ -965,4 +1002,5 @@
         (allow-tab-exit #t)
         (send top-buffer set-cursor arrow-cursor) 
         (min-width 150)
-        (min-height 200)))))
+        (min-height 200)
+        (set-scroll-via-copy #t)))))
