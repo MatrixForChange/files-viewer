@@ -81,6 +81,8 @@
 (define (refresh-label v)
   (if v "Disable auto refresh" "Enable auto refresh"))
 
+
+;; TODO: add double-click & right-click context menu item for editing workspace.
 (define workspace-manager%
   (class frame%
     (super-new [label "Workspace manager"] [width 540] [height 410])
@@ -92,7 +94,11 @@
     (define ws (new list-box%
                     [parent this][choices '()]
                     [style '(column-headers single)]
-                    [label ""][columns '("Name" "Path")]))
+                    [label ""][columns '("Name" "Path")]
+                    [callback (λ (list-box event)
+                                (when (equal? (send event get-event-type) 'list-box-dclick)
+                                  ;; TODO: complete this.
+                                  (void)))]))
     (send ws set-column-width 0 200 150 10000)
     (send ws set-column-width 1 320 150 10000)
     (define bp (new horizontal-panel% [parent this][alignment '(right bottom)]
@@ -164,6 +170,22 @@
       (super on-subwindow-char recv ev))
     (send name-text focus)))
 
+;; TODO: complete this.
+(define edit-workspace%
+  (class frame%
+    (super-new [label "Edit workspace"]
+               [width 475] [height 180])
+    (define btn-save (new button%
+                          [label "Save"]
+                          [callback (λ (btn e)
+                                      (void)
+                                      )]))
+    (define btn-cancel (new button%
+                            [label "Cancel"]
+                            [callback (λ (btn e)
+                                        (void)
+                                        )]))
+    ))
 
 (define extra-settings%
   (class frame%
