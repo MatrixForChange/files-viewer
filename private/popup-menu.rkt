@@ -1,6 +1,7 @@
 #lang racket
 (require syntax/parse/define (for-syntax racket/syntax) racket/gui
          framework)
+(require "utils.rkt")
 (provide files-popup-menu%)
 (define files-popup-menu%
   (class popup-menu%
@@ -97,8 +98,10 @@
                     [label ""][columns '("Name" "Path")]
                     [callback (λ (list-box event)
                                 (when (equal? (send event get-event-type) 'list-box-dclick)
-                                  ;; TODO: complete this.
-                                  (void)))]))
+                                    (begin
+                                      ;; TODO: get selection here & pass them as args.
+                                      (send (new edit-workspace% [workspace-name ""]) show #t)
+                                      (refresh))))]))
     (send ws set-column-width 0 200 150 10000)
     (send ws set-column-width 1 320 150 10000)
     (define bp (new horizontal-panel% [parent this][alignment '(right bottom)]
@@ -175,9 +178,35 @@
   (class frame%
     (super-new [label "Edit workspace"]
                [width 475] [height 180])
+    ;; NOTE: this is required to get related info.
+    (init-field workspace-name)
+
+    (define hp1 (new horizontal-panel% [parent this]))
+    (new message% [parent hp1]
+         [label "Name:"]
+         [stretchable-width #f]
+         [min-width 45])
+    (define tf-name (new text-field% [parent hp1]
+                         [label ""]))
+
+    (define hp2 (new horizontal-panel% [parent this]))
+    (new message% [parent hp2]
+         [label "Path:"]
+         [stretchable-width #f]
+         [min-width 45])
+    (define tf-path (new text-field% [parent hp2]
+                         [label ""]))
+
+    ;; TODO: dir button
+    
     (define btn-save (new button%
                           [label "Save"]
                           [callback (λ (btn e)
+                                      #|
+                                  (let* ((workspace-data (preferences:get 'files-viewer:workspaces))
+                                         (edited-data
+                                          (assocmap-set workspace-data
+                                                        )|#
                                       (void)
                                       )]))
     (define btn-cancel (new button%
