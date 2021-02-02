@@ -82,44 +82,58 @@
 (define (refresh-label v)
   (if v "Disable auto refresh" "Enable auto refresh"))
 
-
-;; TODO: add double-click & right-click context menu item for editing workspace.
 (define workspace-manager%
   (class frame%
     (super-new [label "Workspace manager"] [width 540] [height 410])
+    
     (define (refresh)
       (define prefs (preferences:get 'files-viewer:workspaces))
       (when prefs
         (send ws set (map first prefs)
               (map second prefs))))
+      
     (define ws (new list-box%
                     [parent this][choices '()]
                     [style '(column-headers single)]
                     [label ""][columns '("Name" "Path")]
                     [callback (λ (list-box event)
                                 (when (equal? (send event get-event-type) 'list-box-dclick)
-                                    (begin
-                                      ;; TODO: get selection here & pass them as args.
-                                      (send (new edit-workspace% [workspace-name ""]) show #t)
-                                      (refresh))))]))
+                                  (begin
+                                    ;; NOTE: this will only take the first selected workspace if
+                                    ;; multiple workspace is selected, as occasions where you need
+                                    ;; to edit multiple workspace at once is kinda rare.
+                                    ;; `get-string-selection` only gets the first column.
+                                    ;; `get-data` with `get-selection` somehow does not work (will
+                                    ;; only returns #f)
+                                    (let ((item (send list-box get-string-selection)))
+                                      (send (new edit-workspace% [workspace-name item]) show #t))
+                                    (refresh)))
+                                )]))
     (send ws set-column-width 0 200 150 10000)
     (send ws set-column-width 1 320 150 10000)
     (define bp (new horizontal-panel% [parent this][alignment '(right bottom)]
                     [stretchable-height #f]))
     (refresh)
-   
+    
     (define delete-button (new button% [label "Delete the workspace"]
                                [parent bp]
                                [callback (λ (c e) (define s (send ws get-selections))
                                            (unless (null? s)
                                              (preferences:set 'files-viewer:workspaces
-                                                               (for/list ([(x i)
-                                                                           (in-indexed
-                                                                            (preferences:get 'files-viewer:workspaces))]
-                                                                          #:unless (= (first s) i))
-                                                                 x))
+                                                              (for/list ([(x i)
+                                                                          (in-indexed
+                                                                           (preferences:get 'files-viewer:workspaces))]
+                                                                         #:unless (= (first s) i))
+                                                                x))
                                              (refresh)
                                              ))]))
+    (define edit-button (new button% [parent bp]
+                             [label "Edit workspace"]
+                             [callback (λ (c e)
+                                         (begin
+                                           (let ((item (send ws get-string-selection)))
+                                             (send (new edit-workspace% [workspace-name item]) show #t))
+                                           (refresh)))]))
     (define new-button (new button% [label "Add new workspace"]
                             [parent bp]
                             [callback (λ (c e)
@@ -173,7 +187,10 @@
       (super on-subwindow-char recv ev))
     (send name-text focus)))
 
-;; TODO: complete this.
+
+;; NOTE: "add new workspace" & "edit existing workspace" are essentially the same thing
+;; in the current setting but I'm not sure if reusing the same code will add trouble
+;; when the two functionalities become different in the future.
 (define edit-workspace%
   (class frame%
     (super-new [label "Edit workspace"]
@@ -188,6 +205,7 @@
          [min-width 45])
     (define tf-name (new text-field% [parent hp1]
                          [label ""]))
+    (send tf-name set-value workspace-name)
 
     (define hp2 (new horizontal-panel% [parent this]))
     (new message% [parent hp2]
@@ -196,25 +214,41 @@
          [min-width 45])
     (define tf-path (new text-field% [parent hp2]
                          [label ""]))
+    (let* ((workspace-data (preferences:get 'files-viewer:workspaces))
+           (lookup-res (assoc workspace-name workspace-data)))
+      (when lookup-res
+        (send tf-path set-value (cadr lookup-res))))
 
-    ;; TODO: dir button
-    
-    (define btn-save (new button%
+    (define hp3 (new horizontal-panel% [parent this]
+                     [alignment '(right bottom)]
+                     [stretchable-height #f]))
+    (define btn-dir (new button% [parent hp3]
+                         [label "Select directory..."]
+                         [callback (λ (c e)
+                                     (let ((res (get-directory)))
+                                       (when res
+                                         (send tf-path set-value (path->string res)))))]))
+    (define btn-save (new button% [parent hp3]
                           [label "Save"]
-                          [callback (λ (btn e)
-                                      #|
-                                  (let* ((workspace-data (preferences:get 'files-viewer:workspaces))
-                                         (edited-data
-                                          (assocmap-set workspace-data
-                                                        )|#
-                                      (void)
-                                      )]))
-    (define btn-cancel (new button%
+                          [callback
+                           (λ (btn e)
+                             (let* ((workspace-data (preferences:get 'files-viewer:workspaces))
+                                    (edited-data
+                                     (assocmap-set workspace-data
+                                                   (send tf-name get-value)
+                                                   (send tf-path get-value))))
+                               (preferences:set 'files-viewer:workspaces
+                                                edited-data))
+                             (send this show #f))]))
+    (define btn-cancel (new button% [parent hp3]
                             [label "Cancel"]
                             [callback (λ (btn e)
-                                        (void)
-                                        )]))
-    ))
+                                        (send this show #f))]))
+
+    (define/override (on-subwindow-char recv ev)
+      (when (equal? (send ev get-key-code) #\return)
+        (send btn-save command (make-object control-event% 'button (current-milliseconds))))
+      (super on-subwindow-char recv ev))))
 
 (define extra-settings%
   (class frame%
