@@ -610,7 +610,11 @@
           
         (define item (make-object (mixin hierarchical-list-item%) this))
         (define item-buffer (make-object (get-item-text%) top top-select item this depth))
-        (super-make-object item-buffer #f 5 0 0 0 0 0 0 0)))
+        ;workaround for zero horizontal-inset on editor-canvas
+        (super-make-object item-buffer #f (if (eq? (send top get-editor) parent)
+                                              5
+                                              0)
+                           0 0 0 0 0 0 0)))
 
     ;; Snip for a compound list item
     (define hierarchical-list-snip%
@@ -713,7 +717,7 @@
         (define title-buffer (make-object (get-title-text%) top top-select item this depth))
         (define content-buffer (make-object (get-content-text%) top top-select depth this))
         (define title-snip (make-object editor-snip% title-buffer #f 0 0 0 0 0 0 0 0))
-        (define content-snip (make-object editor-snip% content-buffer #f 4 0 0 0 0 0 0 0))
+        (define content-snip (make-object editor-snip% content-buffer #f 0 0 0 0 0 0 0 0))
         (define arrow (make-object (get-arrow-snip%) (lambda (a) (on-arrow a))))
         (define whitespace (make-object whitespace-snip%))
         (override*
@@ -726,7 +730,11 @@
         (public*
          [get-arrow-snip (lambda () arrow)])
         (inherit style-background-used?)
-        (super-make-object main-buffer #f 5 0 0 0 0 0 0 0)
+        ;workaround for zero horizontal-inset on editor-canvas
+        (super-make-object main-buffer #f (if (eq? (send top get-editor) parent)
+                                              5
+                                              0)
+                           0 0 0 0 0 0 0)
         (send main-buffer hide-caret #t)
         (send main-buffer insert arrow)
         (when title (send title-buffer insert title))
@@ -1013,5 +1021,6 @@
         (send top-buffer set-cursor arrow-cursor) 
         (min-width 150)
         (min-height 200)
+        ; workaround for bad interaction between scroll-via-copy and editor-snip
         (horizontal-inset 0)
         (set-scroll-via-copy #t)))))
