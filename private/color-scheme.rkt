@@ -6,7 +6,8 @@
 
 (define canvas:color-scheme<%>
   (interface ()
-    get-selected-background))
+    get-selected-background
+    get-text-foreground))
 
 (define-syntax-rule (define-scheme-callback pref)
   (begin
@@ -30,6 +31,9 @@
     (inherit set-canvas-background get-dc refresh)
 
     (define selected-background #f)
+    (define text-foreground #f)
+    (define/public (get-text-foreground)
+      (or text-foreground (send (get-dc) get-text-foreground)))
 
     (define/public (get-selected-background)
       selected-background)
@@ -50,7 +54,7 @@
     (register-scheme-callback (framework:basic-canvas-background v)
       (set-canvas-background v))
     (register-scheme-callback (framework:default-text-color v)
-      (send (get-dc) set-text-foreground v))
+      (set! text-foreground v))
     (register-scheme-callback (framework:paren-match-color v)
       (set! selected-background v))
     ))

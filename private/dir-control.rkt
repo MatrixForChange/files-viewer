@@ -36,7 +36,7 @@
   (class (color-scheme-mixin canvas%)
     (inherit refresh get-dc popup-menu set-canvas-background
               init-auto-scrollbars get-view-start
-              get-selected-background)
+              get-selected-background get-text-foreground)
     
     (init [callback (λ (ce e)
                       (println (list-ref (send ce get-path-elements)
@@ -73,9 +73,6 @@
       (define old-pen (send dc get-pen))
 
       (send dc set-brush "silver" 'solid)
-      (send dc set-pen
-            (send dc get-text-foreground)
-            1 'solid)
 
       (for/fold ([xoffset 0]
                  #:result (when need-resize?
@@ -88,9 +85,13 @@
         (define label (car pe))
         (define (draw-background-segment
                  a-dc side-width text-height xoffset yoffset highlight?)
-          (if highlight?
-              (send dc set-brush highlighted 'solid)
-              (send dc set-brush (get-selected-background) 'solid))
+          (cond
+            [highlight?
+             (send dc set-pen (get-highlight-text-color) 1 'solid)
+             (send dc set-brush (get-highlight-background-color) 'solid)]
+            [else
+             (send dc set-pen (get-text-foreground) 1 'solid)
+             (send dc set-brush (get-selected-background) 'solid)])
           (define height (+ text-height (/ text-height 5)))
           (send a-dc draw-polygon
                 (segment-outline-list height side-width)
@@ -98,20 +99,25 @@
 
         (define-values (width font-height pd pa)
           (send dc get-text-extent label))
+
+        (define highlight?
+          (and (<= xoffset (send mouse-pos get-x) (+ xoffset width 10))
+               (<= 0 (send mouse-pos get-y) (* 1.2 font-height))))
         
         (draw-background-segment
          dc (+ width 10) font-height xoffset 0 ; y offset
-         (cond [(and (<= xoffset (send mouse-pos get-x) (+ xoffset width 10))
-                     (<= 0 (send mouse-pos get-y) (* 1.2 font-height)))
-                (set! path-index i) #t]
-               [else #f]))
-        (cond
-          [(= xoffset 0)
-           (send dc draw-text label (+ xoffset left-margin) 0)
-           (+ xoffset gap width)]
-          [else
-           (send dc draw-text label (+ xoffset left-margin) 0)
-           (+ xoffset gap width)]))
+         highlight?)
+
+        (when highlight?
+          (set! path-index i))
+        
+        (send dc set-text-foreground
+              (if highlight?
+                  (get-highlight-text-color)
+                  (get-text-foreground)))
+        (send dc draw-text label (+ xoffset left-margin) 0)
+        (+ xoffset gap width))
+
       (send dc set-brush old-brush)
       (send dc set-pen old-pen))
     
