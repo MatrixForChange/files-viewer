@@ -107,10 +107,8 @@
 
     (define transparent (make-object brush% "WHITE" 'transparent))
     (define transparent-pen (make-object pen% "WHITE" 1 'transparent))
-    (define black-xor-pen (make-object pen% "gray" 1 'solid))
     (define red (make-object brush% "RED" 'solid))
     (define blue (make-object brush% "BLUE" 'solid))
-    (define black-xor (make-object brush% "gray" 'solid))
     (define arrow-cursor (make-object cursor% 'arrow))
 
     (define-values (up-bitmap down-bitmap up-click-bitmap down-click-bitmap)
@@ -401,8 +399,13 @@
                     (get-view-size wbox hbox)
                     (set! right (unbox wbox))
                     (set! bottom (unbox hbox))))
-                (send dc set-brush (if filled? black-xor transparent))
-                (send dc set-pen (if filled? transparent-pen black-xor-pen))
+                (cond
+                  [filled?
+                   (send dc set-brush (color-prefs:lookup-in-color-scheme 'framework:paren-match-color) 'solid)
+                   (send dc set-pen transparent-pen)]
+                  [else
+                   (send dc set-brush transparent)
+                   (send dc set-pen (color-prefs:lookup-in-color-scheme 'framework:paren-match-color) 1 'solid)])
                 (send dc draw-rectangle (+ dx left) (+ dy top_) (- right left) (- bottom top_))
                 (unless (or filled? ((- right left) . < . 2) ((- bottom top_) . < . 2))
                   (send dc draw-rectangle (+ dx left 1) (+ dy top_ 1) (- right left 2) (- bottom top_ 2)))
