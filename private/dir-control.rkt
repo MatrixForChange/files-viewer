@@ -73,6 +73,8 @@
       (define old-pen (send dc get-pen))
 
       (send dc set-brush "silver" 'solid)
+      (define highlight-color
+        (or (get-highlight-text-color) (get-text-foreground)))
 
       (for/fold ([xoffset 0]
                  #:result (when need-resize?
@@ -87,7 +89,7 @@
                  a-dc side-width text-height xoffset yoffset highlight?)
           (cond
             [highlight?
-             (send dc set-pen (get-highlight-text-color) 1 'solid)
+             (send dc set-pen highlight-color 1 'solid)
              (send dc set-brush (get-highlight-background-color) 'solid)]
             [else
              (send dc set-pen (get-text-foreground) 1 'solid)
@@ -113,7 +115,7 @@
         
         (send dc set-text-foreground
               (if highlight?
-                  (get-highlight-text-color)
+                  highlight-color
                   (get-text-foreground)))
         (send dc draw-text label (+ xoffset left-margin) 0)
         (+ xoffset gap width))
