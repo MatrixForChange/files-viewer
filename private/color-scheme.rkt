@@ -14,13 +14,15 @@
 ;;; we have to hold the canvases weakly by ourselves.
 (define-syntax-rule (define-scheme-callback pref)
   (begin
-    (define callbacks (make-ephemeron-hasheq))
+    (define callbacks (make-weak-hasheq))
     (define (pref this fn)
-      (hash-set! callbacks this fn))
+      (hash-set! callbacks this (make-ephemeron this fn)))
     (color-prefs:register-color-scheme-entry-change-callback
      'pref
-     (λ (x) (for ([fn (in-ephemeron-hash-values callbacks)])
-              (fn x)))
+     (λ (x) (for ([e (in-weak-hash-values callbacks)])
+              (define fn (ephemeron-value e))
+              (when fn
+                (fn x))))
      #f))
   )
 
