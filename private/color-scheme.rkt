@@ -9,16 +9,18 @@
     get-selected-background
     get-text-foreground))
 
+;;; the procedure passed to color-prefs:register-color-scheme-entry-change-callback
+;;; will be contracted, so the `weak?` option doesn't work.
+;;; we have to hold the canvases weakly by ourselves.
 (define-syntax-rule (define-scheme-callback pref)
   (begin
-    (define callbacks (make-weak-hasheq))
+    (define callbacks (make-ephemeron-hasheq))
     (define (pref this fn)
       (hash-set! callbacks this fn))
     (color-prefs:register-color-scheme-entry-change-callback
      'pref
-     (λ (x) (for ([fn (in-hash-values callbacks)])
+     (λ (x) (for ([fn (in-ephemeron-hash-values callbacks)])
               (fn x)))
-     ;the fn is contracted, so weak? doesn't work
      #f))
   )
 
