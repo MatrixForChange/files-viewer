@@ -610,7 +610,7 @@
           
         (define item (make-object (mixin hierarchical-list-item%) this))
         (define item-buffer (make-object (get-item-text%) top top-select item this depth))
-        (super-make-object item-buffer #f 0 0 0 0 0 0 0 0)))
+        (super-make-object item-buffer #f 5 0 0 0 0 0 0 0)))
 
     ;; Snip for a compound list item
     (define hierarchical-list-snip%
@@ -726,7 +726,7 @@
         (public*
          [get-arrow-snip (lambda () arrow)])
         (inherit style-background-used?)
-        (super-make-object main-buffer #f 0 0 0 0 0 0 0 0)
+        (super-make-object main-buffer #f 5 0 0 0 0 0 0 0)
         (send main-buffer hide-caret #t)
         (send main-buffer insert arrow)
         (when title (send title-buffer insert title))
@@ -779,7 +779,8 @@
     (define hierarchical-list%
       (class (canvas:color-mixin (canvas:basic-mixin editor-canvas%))
         (init parent [style '(no-hscroll)])
-        (inherit min-width min-height allow-tab-exit set-scroll-via-copy)
+        (inherit min-width min-height allow-tab-exit set-scroll-via-copy
+                 horizontal-inset)
         (rename-super [super-on-char on-char]
                       [super-on-focus on-focus])
         (public*
@@ -1012,4 +1013,5 @@
         (send top-buffer set-cursor arrow-cursor) 
         (min-width 150)
         (min-height 200)
+        (horizontal-inset 0)
         (set-scroll-via-copy #t)))))
