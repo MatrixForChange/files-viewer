@@ -345,9 +345,12 @@
          [get-items (lambda () (send (send snip get-content-buffer) get-items))])
         (super-make-object snip)))
 
+    (define (text:color-mixin %)
+      (text:foreground-color-mixin (editor:standard-style-list-mixin (text:basic-mixin (editor:basic-mixin %)))))
+
     ;; Buffer for a single list item
     (define hierarchical-item-text%
-      (class text%
+      (class (text:color-mixin text%)
         (init tp tp-select itm snp dpth)
         (inherit hide-caret
                  last-position set-position set-keymap
@@ -768,7 +771,7 @@
     (send list-keymap map-function "return" "toggle-open/closed")
 
     (define hierarchical-list%
-      (class editor-canvas%
+      (class (canvas:color-mixin (canvas:basic-mixin editor-canvas%))
         (init parent [style '(no-hscroll)])
         (inherit min-width min-height allow-tab-exit set-scroll-via-copy)
         (rename-super [super-on-char on-char]
@@ -997,7 +1000,7 @@
                              this (lambda (i s c? s?) (do-select i s c? s?)) 0 #f))
         (define selected #f)
         (define selected-item #f)
-        (send top-buffer set-transparent (member 'transparent style))
+        (send top-buffer set-transparent #t #;(member 'transparent style))
         (super-make-object parent top-buffer style)
         (allow-tab-exit #t)
         (send top-buffer set-cursor arrow-cursor) 
