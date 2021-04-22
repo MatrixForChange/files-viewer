@@ -344,9 +344,12 @@
                                     (send snip check-empty-now)))]
          [get-items (lambda () (send (send snip get-content-buffer) get-items))])
         (super-make-object snip)))
-
+    
     (define (text:color-mixin %)
-      (text:foreground-color-mixin (editor:standard-style-list-mixin (text:basic-mixin (editor:basic-mixin %)))))
+      (class (editor:standard-style-list-mixin %)
+        (define/override (default-style-name)
+          (editor:get-default-color-style-name))
+        (super-new)))
 
     ;; Buffer for a single list item
     (define hierarchical-item-text%
