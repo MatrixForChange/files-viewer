@@ -50,6 +50,8 @@
       (define t (get-editor))
       (send t erase)
       (send t insert str)
+      ; inserts the icon later, otherwise the style would not be updated when preferences change.
+      ; this is a workaround, and might need more investigation.
       (send t insert (file-icon-snip str) 0)
       (send t change-style (make-object style-delta% 'change-alignment 'top) 0 (send t last-position))
       (send t change-style red-style (+ (car where) 1) (+ (cdr where) 1)))
