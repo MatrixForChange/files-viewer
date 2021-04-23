@@ -345,9 +345,11 @@
     
     (define (text:color-mixin %)
       (class (editor:standard-style-list-mixin %)
+        (inherit set-styles-sticky)
         (define/override (default-style-name)
           (editor:get-default-color-style-name))
-        (super-new)))
+        (super-new)
+        (set-styles-sticky #f)))
 
     ;; Buffer for a single list item
     (define hierarchical-item-text%
