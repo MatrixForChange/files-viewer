@@ -107,10 +107,8 @@
 
     (define transparent (make-object brush% "WHITE" 'transparent))
     (define transparent-pen (make-object pen% "WHITE" 1 'transparent))
-    (define black-xor-pen (make-object pen% "gray" 1 'solid))
     (define red (make-object brush% "RED" 'solid))
     (define blue (make-object brush% "BLUE" 'solid))
-    (define black-xor (make-object brush% "gray" 'solid))
     (define arrow-cursor (make-object cursor% 'arrow))
 
     (define-values (up-bitmap down-bitmap up-click-bitmap down-click-bitmap)
@@ -344,10 +342,18 @@
                                     (send snip check-empty-now)))]
          [get-items (lambda () (send (send snip get-content-buffer) get-items))])
         (super-make-object snip)))
+    
+    (define (text:color-mixin %)
+      (class (editor:standard-style-list-mixin %)
+        (inherit set-styles-sticky)
+        (define/override (default-style-name)
+          (editor:get-default-color-style-name))
+        (super-new)
+        (set-styles-sticky #f)))
 
     ;; Buffer for a single list item
     (define hierarchical-item-text%
-      (class text%
+      (class (text:color-mixin text%)
         (init tp tp-select itm snp dpth)
         (inherit hide-caret
                  last-position set-position set-keymap
@@ -395,8 +401,13 @@
                     (get-view-size wbox hbox)
                     (set! right (unbox wbox))
                     (set! bottom (unbox hbox))))
-                (send dc set-brush (if filled? black-xor transparent))
-                (send dc set-pen (if filled? transparent-pen black-xor-pen))
+                (cond
+                  [filled?
+                   (send dc set-brush (color-prefs:lookup-in-color-scheme 'framework:paren-match-color) 'solid)
+                   (send dc set-pen transparent-pen)]
+                  [else
+                   (send dc set-brush transparent)
+                   (send dc set-pen (color-prefs:lookup-in-color-scheme 'framework:paren-match-color) 1 'solid)])
                 (send dc draw-rectangle (+ dx left) (+ dy top_) (- right left) (- bottom top_))
                 (unless (or filled? ((- right left) . < . 2) ((- bottom top_) . < . 2))
                   (send dc draw-rectangle (+ dx left 1) (+ dy top_ 1) (- right left 2) (- bottom top_ 2)))
@@ -601,7 +612,11 @@
           
         (define item (make-object (mixin hierarchical-list-item%) this))
         (define item-buffer (make-object (get-item-text%) top top-select item this depth))
-        (super-make-object item-buffer #f 0 0 0 0 0 0 0 0)))
+        ;workaround for zero horizontal-inset on editor-canvas
+        (super-make-object item-buffer #f (if (eq? (send top get-editor) parent)
+                                              5
+                                              0)
+                           0 0 0 0 0 0 0)))
 
     ;; Snip for a compound list item
     (define hierarchical-list-snip%
@@ -704,7 +719,7 @@
         (define title-buffer (make-object (get-title-text%) top top-select item this depth))
         (define content-buffer (make-object (get-content-text%) top top-select depth this))
         (define title-snip (make-object editor-snip% title-buffer #f 0 0 0 0 0 0 0 0))
-        (define content-snip (make-object editor-snip% content-buffer #f 4 0 0 0 0 0 0 0))
+        (define content-snip (make-object editor-snip% content-buffer #f 0 0 0 0 0 0 0 0))
         (define arrow (make-object (get-arrow-snip%) (lambda (a) (on-arrow a))))
         (define whitespace (make-object whitespace-snip%))
         (override*
@@ -717,7 +732,11 @@
         (public*
          [get-arrow-snip (lambda () arrow)])
         (inherit style-background-used?)
-        (super-make-object main-buffer #f 0 0 0 0 0 0 0 0)
+        ;workaround for zero horizontal-inset on editor-canvas
+        (super-make-object main-buffer #f (if (eq? (send top get-editor) parent)
+                                              5
+                                              0)
+                           0 0 0 0 0 0 0)
         (send main-buffer hide-caret #t)
         (send main-buffer insert arrow)
         (when title (send title-buffer insert title))
@@ -768,9 +787,10 @@
     (send list-keymap map-function "return" "toggle-open/closed")
 
     (define hierarchical-list%
-      (class editor-canvas%
+      (class (canvas:color-mixin (canvas:basic-mixin editor-canvas%))
         (init parent [style '(no-hscroll)])
-        (inherit min-width min-height allow-tab-exit set-scroll-via-copy)
+        (inherit min-width min-height allow-tab-exit set-scroll-via-copy
+                 horizontal-inset)
         (rename-super [super-on-char on-char]
                       [super-on-focus on-focus])
         (public*
@@ -997,10 +1017,12 @@
                              this (lambda (i s c? s?) (do-select i s c? s?)) 0 #f))
         (define selected #f)
         (define selected-item #f)
-        (send top-buffer set-transparent (member 'transparent style))
+        (send top-buffer set-transparent #t #;(member 'transparent style))
         (super-make-object parent top-buffer style)
         (allow-tab-exit #t)
         (send top-buffer set-cursor arrow-cursor) 
         (min-width 150)
         (min-height 200)
+        ; workaround for bad interaction between scroll-via-copy and editor-snip
+        (horizontal-inset 0)
         (set-scroll-via-copy #t)))))

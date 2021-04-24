@@ -6,7 +6,8 @@
 
 (require racket/gui/base
          racket/class
-         racket/list)
+         racket/list
+         "color-scheme.rkt")
 (provide dir-control% path-alist)
 ;;
 
@@ -32,9 +33,10 @@
     (super-new)))
 
 (define dir-control%
-  (class canvas%
+  (class (color-scheme-mixin canvas%)
     (inherit refresh get-dc popup-menu set-canvas-background
-              init-auto-scrollbars get-view-start)
+              init-auto-scrollbars get-view-start
+              get-selected-background get-text-foreground)
     
     (init [callback (λ (ce e)
                       (println (list-ref (send ce get-path-elements)
@@ -71,7 +73,8 @@
       (define old-pen (send dc get-pen))
 
       (send dc set-brush "silver" 'solid)
-      (send dc set-pen "black" 1 'solid)
+      (define highlight-color
+        (or (get-highlight-text-color) (get-text-foreground)))
 
       (for/fold ([xoffset 0]
                  #:result (when need-resize?
@@ -83,9 +86,14 @@
                 ([(pe i) (in-indexed path-elements)])
         (define label (car pe))
         (define (draw-background-segment
-                 a-dc side-width text-height xoffset yoffset colour)
-
-          (send dc set-brush colour 'solid)
+                 a-dc side-width text-height xoffset yoffset highlight?)
+          (cond
+            [highlight?
+             (send dc set-pen highlight-color 1 'solid)
+             (send dc set-brush (get-highlight-background-color) 'solid)]
+            [else
+             (send dc set-pen (get-text-foreground) 1 'solid)
+             (send dc set-brush (get-selected-background) 'solid)])
           (define height (+ text-height (/ text-height 5)))
           (send a-dc draw-polygon
                 (segment-outline-list height side-width)
@@ -93,26 +101,30 @@
 
         (define-values (width font-height pd pa)
           (send dc get-text-extent label))
+
+        (define highlight?
+          (and (<= xoffset (send mouse-pos get-x) (+ xoffset width 10))
+               (<= 0 (send mouse-pos get-y) (* 1.2 font-height))))
         
         (draw-background-segment
          dc (+ width 10) font-height xoffset 0 ; y offset
-         (cond [(and (<= xoffset (send mouse-pos get-x) (+ xoffset width 10))
-                     (<= 0 (send mouse-pos get-y) (* 1.2 font-height)))
-                (set! path-index i) highlighted]
-               [else "Gainsboro"]))
-        (cond
-          [(= xoffset 0)
-           (send dc draw-text label (+ xoffset left-margin) 0)
-           (+ xoffset gap width)]
-          [else
-           (send dc draw-text label (+ xoffset left-margin) 0)
-           (+ xoffset gap width)]))
+         highlight?)
+
+        (when highlight?
+          (set! path-index i))
+        
+        (send dc set-text-foreground
+              (if highlight?
+                  highlight-color
+                  (get-text-foreground)))
+        (send dc draw-text label (+ xoffset left-margin) 0)
+        (+ xoffset gap width))
+
       (send dc set-brush old-brush)
       (send dc set-pen old-pen))
     
     (super-new [style '(hscroll)][stretchable-height #f][min-height 45])
     
-    (set-canvas-background (make-object color% "WhiteSmoke"))
     (define (select-action mouse-xpos)
       (callback this (new dir-control-event% [path-index path-index])))
     
