@@ -1,7 +1,6 @@
 #lang racket
 (require syntax/parse/define (for-syntax racket/syntax) racket/gui
          framework)
-(require "utils.rkt")
 (provide files-popup-menu%)
 (define files-popup-menu%
   (class popup-menu%
@@ -98,17 +97,15 @@
                     [label ""][columns '("Name" "Path")]
                     [callback (λ (list-box event)
                                 (when (equal? (send event get-event-type) 'list-box-dclick)
-                                  (begin
-                                    ;; NOTE: this will only take the first selected workspace if
-                                    ;; multiple workspace is selected, as occasions where you need
-                                    ;; to edit multiple workspace at once is kinda rare.
-                                    ;; `get-string-selection` only gets the first column.
-                                    ;; `get-data` with `get-selection` somehow does not work (will
-                                    ;; only returns #f)
-                                    (let ((item (send list-box get-string-selection)))
-                                      (send (new edit-workspace% [workspace-name item]) show #t))
-                                    (refresh)))
-                                )]))
+                                  ;; NOTE: this will only take the first selected workspace if
+                                  ;; multiple workspace is selected, as occasions where you need
+                                  ;; to edit multiple workspace at once is kinda rare.
+                                  ;; `get-string-selection` only gets the first column.
+                                  ;; `get-data` with `get-selection` somehow does not work (will
+                                  ;; only returns #f)
+                                  (let ((item (send list-box get-string-selection)))
+                                    (send (new edit-workspace% [workspace-name item]) show #t))
+                                  (refresh)))]))
     (send ws set-column-width 0 200 150 10000)
     (send ws set-column-width 1 320 150 10000)
     (define bp (new horizontal-panel% [parent this][alignment '(right bottom)]
@@ -130,10 +127,9 @@
     (define edit-button (new button% [parent bp]
                              [label "Edit workspace"]
                              [callback (λ (c e)
-                                         (begin
-                                           (let ((item (send ws get-string-selection)))
-                                             (send (new edit-workspace% [workspace-name item]) show #t))
-                                           (refresh)))]))
+                                         (let ((item (send ws get-string-selection)))
+                                           (send (new edit-workspace% [workspace-name item]) show #t))
+                                         (refresh))]))
     (define new-button (new button% [label "Add new workspace"]
                             [parent bp]
                             [callback (λ (c e)
@@ -177,10 +173,10 @@
                            [parent bp]
                            [label "OK"]
                            [callback (λ (c e) (define prefs (preferences:get 'files-viewer:workspaces))
-                                        (preferences:set 'files-viewer:workspaces
-                                                         (append prefs (list (list (send name-text get-value)
-                                                                                   (send path-text get-value)))))
-                                        (send this show #f))]))
+                                       (preferences:set 'files-viewer:workspaces
+                                                        (append prefs (list (list (send name-text get-value)
+                                                                                  (send path-text get-value)))))
+                                       (send this show #f))]))
     (define/override (on-subwindow-char recv ev)
       (when (equal? (send ev get-key-code) #\return)
         (send ok-button command (make-object control-event% 'button (current-milliseconds))))
@@ -214,8 +210,8 @@
          [min-width 45])
     (define tf-path (new text-field% [parent hp2]
                          [label ""]))
-    (let* ((workspace-data (preferences:get 'files-viewer:workspaces))
-           (lookup-res (assoc workspace-name workspace-data)))
+    (let* ([workspace-data (preferences:get 'files-viewer:workspaces)]
+           [lookup-res (assoc workspace-name workspace-data)])
       (when lookup-res
         (send tf-path set-value (cadr lookup-res))))
 
@@ -225,18 +221,20 @@
     (define btn-dir (new button% [parent hp3]
                          [label "Select directory..."]
                          [callback (λ (c e)
-                                     (let ((res (get-directory)))
+                                     (let ([res (get-directory)])
                                        (when res
                                          (send tf-path set-value (path->string res)))))]))
     (define btn-save (new button% [parent hp3]
                           [label "Save"]
                           [callback
                            (λ (btn e)
-                             (let* ((workspace-data (preferences:get 'files-viewer:workspaces))
-                                    (edited-data
-                                     (assocmap-set workspace-data
-                                                   (send tf-name get-value)
-                                                   (send tf-path get-value))))
+                             (let* ([workspace-data (preferences:get 'files-viewer:workspaces)]
+                                    [edited-data
+                                     ;; NOTE: when the name is changed the record with the original name
+                                     ;; shall be deleted.
+                                     (dict-set (dict-remove workspace-data workspace-name)
+                                               (send tf-name get-value)
+                                               (list (send tf-path get-value)))])
                                (preferences:set 'files-viewer:workspaces
                                                 edited-data))
                              (send this show #f))]))
