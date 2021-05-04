@@ -103,9 +103,10 @@
                                   ;; `get-string-selection` only gets the first column.
                                   ;; `get-data` with `get-selection` somehow does not work (will
                                   ;; only returns #f)
-                                  (let ((item (send list-box get-string-selection)))
-                                    (send (new edit-workspace% [workspace-name item]) show #t))
-                                  (refresh)))]))
+                                  (let ([item (send list-box get-string-selection)])
+                                    (when item
+                                      (send (new edit-workspace% [workspace-name item]) show #t)
+                                      (refresh)))))]))
     (send ws set-column-width 0 200 150 10000)
     (send ws set-column-width 1 320 150 10000)
     (define bp (new horizontal-panel% [parent this][alignment '(right bottom)]
@@ -127,9 +128,10 @@
     (define edit-button (new button% [parent bp]
                              [label "Edit workspace"]
                              [callback (λ (c e)
-                                         (let ((item (send ws get-string-selection)))
-                                           (send (new edit-workspace% [workspace-name item]) show #t))
-                                         (refresh))]))
+                                         (let ([item (send ws get-string-selection)])
+                                           (when item
+                                             (send (new edit-workspace% [workspace-name item]) show #t)
+                                             (refresh))))]))
     (define new-button (new button% [label "Add new workspace"]
                             [parent bp]
                             [callback (λ (c e)
@@ -188,7 +190,7 @@
 ;; in the current setting but I'm not sure if reusing the same code will add trouble
 ;; when the two functionalities become different in the future.
 (define edit-workspace%
-  (class frame%
+  (class dialog%
     (super-new [label "Edit workspace"]
                [width 475] [height 180])
     ;; NOTE: this is required to get related info.
