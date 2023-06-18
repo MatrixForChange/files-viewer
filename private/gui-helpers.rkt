@@ -1,6 +1,6 @@
 #lang racket
 (require "../hierlist/hierlist.rkt" racket/gui framework racket/runtime-path file/glob pict)
-(provide directory-list% my-horizontal-dragable%)
+(provide backup-file-suffix directory-list% my-horizontal-dragable%)
 
 (define my-horizontal-dragable%
   (class panel:horizontal-dragable%
@@ -111,6 +111,11 @@
   (cond [(xor dir? p2) dir?]
         [else (path<? path (send y user-data))]))
 
+(define (backup-file-suffix)
+  (match (system-type 'os)
+    ['windows ".bak"]
+    [_ "~"]))
+
 (define directory-list%
   (class hierarchical-list%
     (init-field [select-callback void]
@@ -204,8 +209,10 @@
         (when (and (or is-directory
                        (not (xor (preferences:get 'files-viewer:filter-types2)
                                  (ormap (λ (x) (path-has-extension? i x)) filter-types))))
-                   (not (and (preferences:get 'files-viewer:filter-types3) (string-prefix? (path->string i) ".")))
-                   (not (and (preferences:get 'files-viewer:filter-types4) (string-suffix? (path->string i) "~")))
+                   (not (and (preferences:get 'files-viewer:filter-types3)
+                             (string-prefix? (path->string i) ".")))
+                   (not (and (preferences:get 'files-viewer:filter-types4)
+                             (string-suffix? (path->string i) (backup-file-suffix))))
                    (or is-directory
                        cute-syntax-enabled?
                        (not compiled-regexp)
