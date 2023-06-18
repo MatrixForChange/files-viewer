@@ -150,30 +150,55 @@
          [min-width 45])
     (define name-text (new text-field% [parent p1] [label ""]))
 
+    ; Check to see if the path-text field contains a valid directory path and
+    ; enable or dispable the OK button if appropriate.
+    (define/private (enable-ok-button)
+      (let ([path-string (send path-text get-value)])
+        (when (non-empty-string? path-string)
+          (send ok-button enable
+                (if (directory-exists? (string->path path-string))
+                    #t #f)))))
+    
     (define p2 (new horizontal-panel% [parent this]))
     (new message%
          [parent p2]
          [label "Path:"]
          [stretchable-width #f]
          [min-width 45])
-    (define path-text (new text-field% [parent p2] [label ""]))
+    (define path-text (new text-field% [parent p2] [label ""] [callback (λ (c e) (enable-ok-button))]))
     
     (define bp (new horizontal-panel%
                     [parent this]
                     [alignment '(right bottom)]
                     [stretchable-height #f]))
-
+    (define dirp (new horizontal-panel%
+                    [parent bp]
+                    [alignment '(left bottom)]
+                    [stretchable-height #f]))
+    (define current-button (new button%
+                                [parent dirp]
+                                [label "Current directory"]
+                                [callback (λ (c e)
+                                            (send path-text set-value
+                                                  (preferences:get 'files-viewer:directory))
+                                            (enable-ok-button))]))
     (define dir-button (new button%
-                            [parent bp]
+                            [parent dirp]
                             [label "Select the directory"]
                             [callback (λ (c e)
                                         (define res (get-directory))
                                         (when res
-                                          (send path-text set-value (path->string res))))]))
-    (define cancel-button (new button% [parent bp] [label "Cancel"] [callback (λ (c e) (send this show #f))]))
+                                          (send path-text set-value (path->string res))
+                                          (enable-ok-button)))]))
+    (define dop (new horizontal-panel%
+                    [parent bp]
+                    [alignment '(right bottom)]
+                    [stretchable-height #f]))
+    (define cancel-button (new button% [parent dop] [label "Cancel"] [callback (λ (c e) (send this show #f))]))
     (define ok-button (new button%
-                           [parent bp]
+                           [parent dop]
                            [label "OK"]
+                           [enabled #f]
                            [callback (λ (c e) (define prefs (preferences:get 'files-viewer:workspaces))
                                        (preferences:set 'files-viewer:workspaces
                                                         (append prefs (list (list (send name-text get-value)
