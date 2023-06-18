@@ -1,7 +1,8 @@
 #lang racket
 (require racket/gui
          framework
-         framework/preferences)
+         framework/preferences
+         "gui-helpers.rkt")
 (provide filter-dialog)
 (define (filter-dialog dparent)
   (define filter-dialog%
@@ -17,13 +18,17 @@
                               [parent panel]
                               [label "Hide dot prefix files and directories."]
                               [value (preferences:get 'files-viewer:filter-types3)]))
+      (define hide~files (new check-box% 
+                              [parent panel]
+                              [label (format "Hide backup files (ending in ~a)." (backup-file-suffix))]
+                              [value (preferences:get 'files-viewer:filter-types4)]))
       (define choice (new radio-box% [choices '("Hide these files."
                                                 "Show these files.")]
                           [label ""]
                           [parent panel]
                           [selection (if (preferences:get 'files-viewer:filter-types2)
                                          1 0)]))
-      (new message% [label "Files types (such as \".bak .zo\"):"] [parent panel])
+      (new message% [label "Files types (such as \".dep .zo\"):"] [parent panel])
       (define types (new text-field%
                          [label ""]
                          [parent panel]
@@ -39,6 +44,7 @@
                                   (preferences:set 'files-viewer:filter-types (string-split (send types get-value) " "))
                                   (preferences:set 'files-viewer:filter-types2 (= 1 (send choice get-selection)))
                                   (preferences:set 'files-viewer:filter-types3 (send hide.files get-value))
+                                  (preferences:set 'files-viewer:filter-types4 (send hide~files get-value))
                                   (send this show #f))]))
       
       (send types focus)
