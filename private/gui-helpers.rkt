@@ -205,6 +205,7 @@
                        (not (xor (preferences:get 'files-viewer:filter-types2)
                                  (ormap (λ (x) (path-has-extension? i x)) filter-types))))
                    (not (and (preferences:get 'files-viewer:filter-types3) (string-prefix? (path->string i) ".")))
+                   (not (and (preferences:get 'files-viewer:filter-types4) (string-suffix? (path->string i) "~")))
                    (or is-directory
                        cute-syntax-enabled?
                        (not compiled-regexp)

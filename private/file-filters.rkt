@@ -17,6 +17,10 @@
                               [parent panel]
                               [label "Hide dot prefix files and directories."]
                               [value (preferences:get 'files-viewer:filter-types3)]))
+      (define hide~files (new check-box% 
+                              [parent panel]
+                              [label "Hide tilde suffix files and directories."]
+                              [value (preferences:get 'files-viewer:filter-types4)]))
       (define choice (new radio-box% [choices '("Hide these files."
                                                 "Show these files.")]
                           [label ""]
@@ -39,6 +43,7 @@
                                   (preferences:set 'files-viewer:filter-types (string-split (send types get-value) " "))
                                   (preferences:set 'files-viewer:filter-types2 (= 1 (send choice get-selection)))
                                   (preferences:set 'files-viewer:filter-types3 (send hide.files get-value))
+                                  (preferences:set 'files-viewer:filter-types4 (send hide~files get-value))
                                   (send this show #f))]))
       
       (send types focus)

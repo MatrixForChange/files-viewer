@@ -22,6 +22,9 @@
                   (preferences:set-default 'files-viewer:is-show
                                            #t
                                            boolean?)
+                  (preferences:set-default 'files-viewer:filter-types4
+                                           #t
+                                           boolean?)
                   (preferences:set-default 'files-viewer:filter-types3
                                            #t
                                            boolean?)
