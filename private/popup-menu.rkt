@@ -154,49 +154,43 @@
     ; enable or dispable the OK button if appropriate.
     (define/private (enable-ok-button)
       (let ([path-string (send path-text get-value)])
-        (when (non-empty-string? path-string)
-          (send ok-button enable
-                (if (directory-exists? (string->path path-string))
-                    #t #f)))))
+        (send ok-button enable
+              (if (and (non-empty-string? path-string)
+                       (directory-exists? (string->path path-string)))
+                  #t #f))))
     
-    (define p2 (new horizontal-panel% [parent this]))
+    (define p2 (new vertical-panel% [parent this]))
+    (define p2txt (new horizontal-panel% [parent p2] [alignment '(center bottom)]))
     (new message%
-         [parent p2]
+         [parent p2txt]
          [label "Path:"]
          [stretchable-width #f]
          [min-width 45])
-    (define path-text (new text-field% [parent p2] [label ""] [callback (λ (c e) (enable-ok-button))]))
+    (define path-text (new text-field% [parent p2txt] [label ""] [callback (λ (c e) (enable-ok-button))]))
     
-    (define bp (new horizontal-panel%
-                    [parent this]
-                    [alignment '(right bottom)]
-                    [stretchable-height #f]))
-    (define dirp (new horizontal-panel%
-                    [parent bp]
-                    [alignment '(left bottom)]
-                    [stretchable-height #f]))
+    (define p2dir (new horizontal-panel% [parent p2] [alignment '(right top)]))
     (define current-button (new button%
-                                [parent dirp]
-                                [label "Current directory"]
+                                [parent p2dir]
+                                [label "Use current directory"]
                                 [callback (λ (c e)
                                             (send path-text set-value
                                                   (preferences:get 'files-viewer:directory))
                                             (enable-ok-button))]))
     (define dir-button (new button%
-                            [parent dirp]
+                            [parent p2dir]
                             [label "Select the directory"]
                             [callback (λ (c e)
                                         (define res (get-directory))
                                         (when res
                                           (send path-text set-value (path->string res))
                                           (enable-ok-button)))]))
-    (define dop (new horizontal-panel%
-                    [parent bp]
+    (define bp (new horizontal-panel%
+                    [parent this]
                     [alignment '(right bottom)]
                     [stretchable-height #f]))
-    (define cancel-button (new button% [parent dop] [label "Cancel"] [callback (λ (c e) (send this show #f))]))
+    (define cancel-button (new button% [parent bp] [label "Cancel"] [callback (λ (c e) (send this show #f))]))
     (define ok-button (new button%
-                           [parent dop]
+                           [parent bp]
                            [label "OK"]
                            [enabled #f]
                            [callback (λ (c e) (define prefs (preferences:get 'files-viewer:workspaces))
@@ -314,3 +308,6 @@
 
 (module+ test1
   (new files-popup-menu% [change-the-directory-callback void]))
+
+(module+ test2
+  (send (new new-workspace%) show #t))
