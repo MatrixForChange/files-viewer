@@ -148,19 +148,20 @@
          [label "Name:"]
          [stretchable-width #f]
          [min-width 45])
-    (define name-text (new text-field% [parent p1] [label ""]))
+    (define name-text (new text-field% [parent p1] [label ""] [callback (λ (c e) (enable-ok-button))]))
 
-    ; Check to see if the path-text field contains a valid directory path and
-    ; enable or dispable the OK button if appropriate.
+    ; Check to see if the name-text field contains a non-empty string and
+    ; the path-text field contains a valid directory path.
+    ; Enable or disable the OK button as appropriate.
     (define/private (enable-ok-button)
       (let ([path-string (send path-text get-value)])
         (send ok-button enable
-              (if (and (non-empty-string? path-string)
-                       (directory-exists? (string->path path-string)))
-                  #t #f))))
+              (and (non-empty-string? (string-trim (send name-text get-value)))
+                   (non-empty-string? path-string)
+                   (directory-exists? (string->path path-string))))))
     
     (define p2 (new vertical-panel% [parent this]))
-    (define p2txt (new horizontal-panel% [parent p2] [alignment '(center bottom)]))
+    (define p2txt (new horizontal-panel% [parent p2] [stretchable-height #f]))
     (new message%
          [parent p2txt]
          [label "Path:"]
@@ -168,7 +169,7 @@
          [min-width 45])
     (define path-text (new text-field% [parent p2txt] [label ""] [callback (λ (c e) (enable-ok-button))]))
     
-    (define p2dir (new horizontal-panel% [parent p2] [alignment '(right top)]))
+    (define p2dir (new horizontal-panel% [parent p2] [alignment '(right top)] [stretchable-height #f]))
     (define current-button (new button%
                                 [parent p2dir]
                                 [label "Use current directory"]
