@@ -11,13 +11,6 @@
 (provide dir-control% path-alist)
 ;;
 
-;; this function seems to never be used anywhere 2023-06-18 madkins23
-(define (my-directory-list dir #:hidden [hidden #t])
-  (if (not hidden)
-      (filter (λ (p) (if (equal? (string-ref (path->string p) 0) #\.) #f #t))
-              (directory-list dir))
-      (directory-list dir)))
-
 ;; list the full paths above this one
 (define (parent-paths path)
   (define-values (base name dir) (split-path path))
