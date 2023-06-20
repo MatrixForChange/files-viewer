@@ -203,7 +203,9 @@
 
       (define-values (dirs regular-files)
         (partition (λ (p) (directory-exists? (build p)))
-                   (sort files path<?)))
+                   (map string->path
+                        (sort (map path->string files)
+                              string-ci<?))))
 
       (define ((add-item! is-directory) i)
         (when (and (or is-directory

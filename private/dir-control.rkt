@@ -11,12 +11,6 @@
 (provide dir-control% path-alist)
 ;;
 
-(define (my-directory-list dir #:hidden [hidden #t])
-  (if (not hidden)
-      (filter (λ (p) (if (equal? (string-ref (path->string p) 0) #\.) #f #t))
-              (directory-list dir))
-      (directory-list dir)))
-
 ;; list the full paths above this one
 (define (parent-paths path)
   (define-values (base name dir) (split-path path))
