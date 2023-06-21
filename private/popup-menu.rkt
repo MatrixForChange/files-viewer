@@ -189,7 +189,6 @@
                     [parent this]
                     [alignment '(right bottom)]
                     [stretchable-height #f]))
-    (define cancel-button (new button% [parent bp] [label "Cancel"] [callback (λ (c e) (send this show #f))]))
     (define ok-button (new button%
                            [parent bp]
                            [label "OK"]
@@ -199,6 +198,7 @@
                                                         (append prefs (list (list (send name-text get-value)
                                                                                   (send path-text get-value)))))
                                        (send this show #f))]))
+    (define cancel-button (new button% [parent bp] [label "Cancel"] [callback (λ (c e) (send this show #f))]))
     (define/override (on-subwindow-char recv ev)
       (when (equal? (send ev get-key-code) #\return)
         (send ok-button command (make-object control-event% 'button (current-milliseconds))))
