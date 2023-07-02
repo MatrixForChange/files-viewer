@@ -9,7 +9,7 @@
 (define drracket-tool-names (list "file-viewer"))
 (define drracket-tool-icons  '(#f))
 
-(define scribblings '(("scribblings/files-viewer.scrbl" () (tool) "files-viewer")))
+(define scribblings '(("scribblings/files-viewer.scrbl" () (tool "DrRacket Plugin") "files-viewer")))
 
 (define drracket-tools (list (list "tool.rkt")))
 (define pkg-desc "File manager for DrRacket")
